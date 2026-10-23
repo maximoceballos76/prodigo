@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pródigo – Tienda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="papel">
+
+  <header class="cabecera">
+    <div class="marca">Pródigo<small>Piezas de la colección disponibles para la venta</small></div>
+    <div class="paletas" role="group" aria-label="Paleta de colores">
+      Paleta:
+      <button type="button" data-paleta="papel" aria-pressed="true">Papel</button>
+      <button type="button" data-paleta="arena" aria-pressed="false">Arena</button>
+      <button type="button" data-paleta="niebla" aria-pressed="false">Niebla</button>
+    </div>
+  </header>
+
+  <main class="catalogo">
+    <nav class="categorias" aria-label="Categorías">
+      <h2>Categorías</h2>
+      <ul id="lista-categorias"></ul>
+    </nav>
+
+    <section aria-live="polite">
+      <div class="encabezado-lista">
+        <h1 id="titulo-lista">Todas las piezas</h1>
+        <p id="cantidad"></p>
+      </div>
+      <div class="grilla" id="grilla"></div>
+    </section>
+  </main>
+
+  <script src="piezas.js"></script>
+  <script>
+    const TODAS = "Todas";
+    let activa = TODAS;
+
+    const grilla = document.getElementById("grilla");
+    const lista = document.getElementById("lista-categorias");
+
+    function pintarCategorias() {
+      const nombres = [TODAS, ...new Set(piezas.map(p => p.categoria))];
+      lista.innerHTML = nombres.map(n => {
+        const total = n === TODAS ? piezas.length : piezas.filter(p => p.categoria === n).length;
+        return `<li><button type="button" data-cat="${n}" aria-pressed="${n === activa}"><span>${n}</span><span>${total}</span></button></li>`;
+      }).join("");
+    }
+
+    function pintarPiezas() {
+      const visibles = activa === TODAS ? piezas : piezas.filter(p => p.categoria === activa);
+      document.getElementById("titulo-lista").textContent = activa === TODAS ? "Todas las piezas" : activa;
+      document.getElementById("cantidad").textContent = visibles.length + (visibles.length === 1 ? " pieza" : " piezas");
+      grilla.innerHTML = visibles.map(p => `
+        <article class="pieza">
+          <a href="pieza.html?id=${p.id}">
+            <div class="placa">${p.imagenes[0] && p.imagenes[0].src ? `<img src="${p.imagenes[0].src}" alt="${p.titulo}" loading="lazy">` : p.titulo.charAt(0)}</div>
+            <h3>${p.titulo}</h3>
+            <p class="detalle">${p.categoria}. ${p.detalle}</p>
+            <p class="precio">${p.precio}</p>
+            <span class="estado ${p.estado === "Reservada" ? "reservada" : ""}">${p.estado}</span>
+          </a>
+        </article>`).join("");
+    }
+
+    lista.addEventListener("click", e => {
+      const b = e.target.closest("button[data-cat]");
+      if (!b) return;
+      activa = b.dataset.cat;
+      pintarCategorias();
+      pintarPiezas();
+    });
+
+    document.querySelector(".paletas").addEventListener("click", e => {
+      const b = e.target.closest("button[data-paleta]");
+      if (!b) return;
+      document.body.dataset.theme = b.dataset.paleta;
+      try { localStorage.setItem("prodigo-paleta", b.dataset.paleta); } catch (_) {}
+      document.querySelectorAll(".paletas button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    });
+
+    try {
+      const guardada = localStorage.getItem("prodigo-paleta");
+      if (guardada) {
+        document.body.dataset.theme = guardada;
+        document.querySelectorAll(".paletas button").forEach(x => x.setAttribute("aria-pressed", x.dataset.paleta === guardada));
+      }
+    } catch (_) {}
+
+    pintarCategorias();
+    pintarPiezas();
+  </script>
+</body>
+</html>

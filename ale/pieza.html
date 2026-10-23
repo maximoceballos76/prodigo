@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pródigo – Pieza</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="papel">
+
+  <header class="cabecera">
+    <a class="marca" href="index.html" style="color: inherit; text-decoration: none;">Pródigo<small>Piezas de la colección disponibles para la venta</small></a>
+  </header>
+
+  <main class="ficha" id="ficha"></main>
+
+  <script src="piezas.js"></script>
+  <script>
+    try {
+      const guardada = localStorage.getItem("prodigo-paleta");
+      if (guardada) document.body.dataset.theme = guardada;
+    } catch (_) {}
+
+    const id = Number(new URLSearchParams(location.search).get("id"));
+    const p = piezas.find(x => x.id === id);
+    const ficha = document.getElementById("ficha");
+
+    if (!p) {
+      document.title = "Pródigo – Pieza no encontrada";
+      ficha.innerHTML = `<div class="vacio"><h1>No encontramos esa pieza</h1><p>Puede que ya no esté en el catálogo.</p><a class="boton" href="index.html">Volver al catálogo</a></div>`;
+    } else {
+      document.title = `Pródigo – ${p.titulo}`;
+      const vistas = p.imagenes.length ? p.imagenes : [{ src: "", etiqueta: "Imagen principal" }];
+
+      const placa = v => v.src
+        ? `<img src="${v.src}" alt="${p.titulo}: ${v.etiqueta}">`
+        : `<span>${p.titulo.charAt(0)}</span>`;
+
+      const consulta = `mailto:contacto@ejemplo.com?subject=${encodeURIComponent("Consulta por " + p.inventario + " – " + p.titulo)}`;
+
+      ficha.innerHTML = `
+        <a class="volver" href="index.html">Volver al catálogo</a>
+        <div class="ficha-cuerpo">
+          <div class="ficha-imagenes">
+            <div class="visor placa" id="visor">${placa(vistas[0])}</div>
+            ${vistas.length > 1 ? `<div class="miniaturas" role="group" aria-label="Vistas de la pieza">
+              ${vistas.map((v, i) => `<button type="button" class="miniatura" data-i="${i}" aria-pressed="${i === 0}" aria-label="${v.etiqueta}"><span class="placa">${placa(v)}</span><small>${v.etiqueta}</small></button>`).join("")}
+            </div>` : ""}
+          </div>
+          <div class="ficha-datos">
+            <p class="detalle">${p.categoria}</p>
+            <h1>${p.titulo}</h1>
+            <p class="precio-grande">${p.precio}</p>
+            <span class="estado ${p.estado === "Reservada" ? "reservada" : ""}">${p.estado}</span>
+            <dl>
+              <dt>Fecha</dt><dd>${p.fecha}</dd>
+              <dt>Técnica</dt><dd>${p.tecnica}</dd>
+              <dt>Medidas</dt><dd>${p.medidas}</dd>
+              <dt>Estado de conservación</dt><dd>${p.conservacion}</dd>
+              <dt>Procedencia</dt><dd>${p.procedencia}</dd>
+              <dt>N.º de inventario</dt><dd>${p.inventario}</dd>
+            </dl>
+            <a class="boton" href="${consulta}">${p.estado === "Reservada" ? "Consultar disponibilidad" : "Consultar por esta pieza"}</a>
+          </div>
+        </div>`;
+
+      // Cambiar de vista con las miniaturas
+      ficha.addEventListener("click", e => {
+        const b = e.target.closest(".miniatura");
+        if (!b) return;
+        document.getElementById("visor").innerHTML = placa(vistas[Number(b.dataset.i)]);
+        ficha.querySelectorAll(".miniatura").forEach(x => x.setAttribute("aria-pressed", x === b));
+        if (Number(b.dataset.i) === 0) iniciarZoom();
+      });
+
+      // Zoom profundo: solo si la pieza tiene archivo .dzi (tiles)
+      function iniciarZoom() {
+        if (!p.dzi) return;
+        const arrancar = () => {
+          document.getElementById("visor").innerHTML = "";
+          OpenSeadragon({ id: "visor", prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/", tileSources: p.dzi, showNavigator: true });
+        };
+        if (window.OpenSeadragon) return arrancar();
+        const s = document.createElement("script");
+        s.src = "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js";
+        s.onload = arrancar;
+        document.head.appendChild(s);
+      }
+      iniciarZoom();
+    }
+  </script>
+</body>
+</html>
