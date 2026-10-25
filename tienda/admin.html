@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pródigo – Panel de administración</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .panel { max-width: 72rem; margin: 0 auto; padding: 2rem clamp(1rem, 4vw, 3rem) 5rem; }
+    .panel h1 { font-family: "Newsreader", Georgia, serif; font-weight: 500; font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.1; }
+    .panel h2 { font-family: "Newsreader", Georgia, serif; font-weight: 500; font-size: 1.5rem; }
+    .intro { color: var(--tinta-suave); margin: 0.35rem 0 2rem; }
+    .sesion { display: flex; justify-content: flex-end; gap: 0.5rem; font-size: 0.9rem; color: var(--tinta-suave); margin-bottom: 1rem; }
+    .sesion button { background: none; border: 0; padding: 0; color: var(--tinta-suave); text-decoration: underline; cursor: pointer; font: inherit; }
+    .aviso { background: #f6e3df; color: #6e231d; border-radius: 8px; padding: 0.8rem 1rem; margin-bottom: 1.5rem; }
+    .aviso.ok { background: color-mix(in srgb, var(--acento) 12%, var(--superficie)); color: var(--tinta); }
+    [hidden] { display: none !important; }
+
+    /* Ingreso */
+    .ingreso { max-width: 26rem; }
+    .campo { margin-bottom: 1.25rem; }
+    .campo label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+    .panel input[type=email], .panel input[type=password], .panel input[type=search], .panel select {
+      width: 100%; font: inherit; color: var(--tinta); background: var(--superficie);
+      border: 1px solid var(--linea); border-radius: 6px; padding: 0.65rem 0.8rem;
+    }
+    .panel input:focus, .panel select:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
+    .panel .boton { border: 0; font: inherit; cursor: pointer; }
+
+    /* Menú: acciones principales y resumen por categoría */
+    .encabezado-panel { display: flex; justify-content: space-between; align-items: center; gap: 0 1.5rem; flex-wrap: wrap; margin-bottom: 1.75rem; }
+    .encabezado-panel .intro { margin-bottom: 0; }
+    .resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
+    .resumen button {
+      all: unset; box-sizing: border-box; cursor: pointer;
+      background: var(--superficie); border: 1px solid var(--linea); border-radius: 10px; padding: 1rem 1.15rem;
+    }
+    .resumen button:hover, .resumen button[aria-pressed="true"] { border-color: var(--acento); }
+    .resumen button:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+    .resumen strong { display: block; font-family: "Newsreader", Georgia, serif; font-weight: 500; font-size: 1.2rem; }
+    .resumen .numero { font-size: 2rem; font-weight: 600; line-height: 1.2; }
+    .resumen small { color: var(--tinta-suave); }
+
+    /* Listado de piezas */
+    .herramientas { display: grid; grid-template-columns: 1fr 15rem; gap: 0.75rem; margin: 1rem 0 0.75rem; }
+    .cantidad { color: var(--tinta-suave); font-size: 0.9rem; margin-bottom: 0.75rem; }
+    .lista { list-style: none; padding: 0; border-top: 1px solid var(--linea); }
+    .fila {
+      display: grid; grid-template-columns: 64px minmax(0, 1fr) auto auto; gap: 1rem; align-items: center;
+      padding: 0.75rem 0; border-bottom: 1px solid var(--linea);
+    }
+    .fila img, .fila .sin-foto { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; background: var(--placa); display: block; }
+    .fila .titulo { font-weight: 600; }
+    .fila .datos { font-size: 0.85rem; color: var(--tinta-suave); }
+    .etiqueta { display: inline-block; font-size: 0.72rem; padding: 0.05rem 0.5rem; border-radius: 999px; border: 1px solid var(--linea); margin-left: 0.35rem; white-space: nowrap; }
+    .etiqueta.oculta { background: var(--tinta-suave); color: var(--fondo); border-color: var(--tinta-suave); }
+    .fila .precio { font-weight: 600; white-space: nowrap; }
+    .fila .acciones { display: flex; gap: 0.4rem; align-items: center; }
+    .chico { padding: 0.4rem 0.8rem; font-size: 0.85rem; border-radius: 4px; text-decoration: none; }
+    .chico.secundario { background: transparent; color: var(--acento); box-shadow: inset 0 0 0 1px var(--acento); }
+    .chico.peligro { background: transparent; color: #a3322b; box-shadow: inset 0 0 0 1px #a3322b; }
+    .chico[disabled] { opacity: 0.6; cursor: wait; }
+    .ver { font-size: 0.85rem; color: var(--tinta-suave); margin-right: 0.25rem; }
+
+    @media (max-width: 700px) {
+      .herramientas { grid-template-columns: 1fr; }
+      .fila { grid-template-columns: 56px minmax(0, 1fr); }
+      .fila img, .fila .sin-foto { width: 56px; height: 56px; }
+      .fila .precio, .fila .acciones { grid-column: 2; }
+    }
+  </style>
+</head>
+<body data-theme="papel">
+
+  <header class="cabecera" id="cabecera"></header>
+  <script src="cabecera.js"></script>
+
+  <main class="panel">
+
+    <!-- 1. Ingreso -->
+    <section id="vista-ingreso" class="ingreso" hidden>
+      <h1>Panel de administración</h1>
+      <p class="intro">Ingresá con tu cuenta de editor o de administrador.</p>
+      <div class="aviso" id="error-ingreso" role="alert" hidden></div>
+      <form id="form-ingreso">
+        <div class="campo">
+          <label for="correo">Correo</label>
+          <input type="email" id="correo" autocomplete="username" required>
+        </div>
+        <div class="campo">
+          <label for="clave">Contraseña</label>
+          <input type="password" id="clave" autocomplete="current-password" required>
+        </div>
+        <button class="boton" type="submit">Ingresar</button>
+      </form>
+    </section>
+
+    <!-- 2. Panel -->
+    <section id="vista-panel" hidden>
+      <div class="sesion"><span id="quien"></span>·<button type="button" id="salir">Cerrar sesión</button></div>
+      <div class="encabezado-panel">
+        <div>
+          <h1>Panel de administración</h1>
+          <p class="intro">Cargá piezas nuevas o buscá una para modificarla o eliminarla.</p>
+        </div>
+        <a class="boton" href="cargar.html">+ Cargar pieza nueva</a>
+      </div>
+
+      <div class="aviso" id="aviso" role="status" hidden></div>
+      <div class="resumen" id="resumen"></div>
+
+      <section aria-labelledby="titulo-piezas">
+        <h2 id="titulo-piezas">Piezas</h2>
+        <div class="herramientas">
+          <input type="search" id="buscar" placeholder="Buscar por título, inventario, marca, lugar, fotógrafo…" aria-label="Buscar piezas">
+          <select id="filtro-cat" aria-label="Categoría"></select>
+        </div>
+        <p class="cantidad" id="cantidad" aria-live="polite"></p>
+        <ul class="lista" id="lista"><li class="fila">Cargando…</li></ul>
+      </section>
+    </section>
+  </main>
+
+  <script src="api.js"></script>
+  <script src="sesion.js"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+    let sesion = null;
+    let categorias = [];
+    let piezas = [];
+
+    function mostrar(vista) {
+      ["vista-ingreso", "vista-panel"].forEach(v => $(v).hidden = v !== vista);
+    }
+
+    function avisar(texto, ok) {
+      $("aviso").textContent = texto;
+      $("aviso").classList.toggle("ok", !!ok);
+      $("aviso").hidden = !texto;
+    }
+
+    // ---------- Ingreso ----------
+
+    $("form-ingreso").addEventListener("submit", async e => {
+      e.preventDefault();
+      const boton = e.submitter;
+      boton.disabled = true;
+      $("error-ingreso").hidden = true;
+      try {
+        sesion = await ingresar($("correo").value.trim(), $("clave").value);
+        if (!sesion) {
+          $("error-ingreso").textContent = "El correo o la contraseña no son correctos.";
+          $("error-ingreso").hidden = false;
+          return;
+        }
+        recordarSesion(sesion);
+        $("clave").value = "";
+        abrirPanel();
+      } catch (err) {
+        console.error(err);
+        $("error-ingreso").textContent = "No se pudo conectar con el servidor. Probá de nuevo en un momento.";
+        $("error-ingreso").hidden = false;
+      } finally {
+        boton.disabled = false;
+      }
+    });
+
+    $("salir").addEventListener("click", () => {
+      sesion = null;
+      recordarSesion(null);
+      mostrar("vista-ingreso");
+    });
+
+    // ---------- Panel ----------
+
+    async function abrirPanel() {
+      $("quien").textContent = "Ingresaste como " + sesion.nombre;
+      mostrar("vista-panel");
+      try {
+        categorias = await listarCategorias();
+        const grupos = await Promise.all(categorias.map(async c => {
+          // shortcut: hasta 500 piezas por categoría en una sola consulta; paginar si alguna crece más
+          const r = await fetch(`${PB_URL}/api/collections/${c.coleccion || c.slug}/records?sort=inventario&perPage=500`,
+            { headers: { Authorization: sesion.token } });
+          if (r.status === 401 || r.status === 403) throw new Error("sesion");
+          if (!r.ok) throw new Error("PocketBase respondió " + r.status);
+          return (await r.json()).items.map(p => ({ ...p, _cat: c }));
+        }));
+        piezas = grupos.flat();
+      } catch (err) {
+        console.error(err);
+        if (err.message === "sesion") {
+          recordarSesion(null);
+          $("error-ingreso").textContent = "Tu sesión venció. Volvé a ingresar.";
+          $("error-ingreso").hidden = false;
+          return mostrar("vista-ingreso");
+        }
+        $("lista").innerHTML = "";
+        return avisar("No se pudieron traer las piezas. Revisá que PocketBase esté corriendo.");
+      }
+      $("filtro-cat").innerHTML = `<option value="">Todas las categorías</option>` +
+        categorias.map(c => `<option value="${esc(c.slug)}">${esc(c.nombre)}</option>`).join("");
+      pintarResumen();
+      pintarLista();
+    }
+
+    const enTienda = p => p.visible && p.destino === DESTINO_VENTA;
+
+    function pintarResumen() {
+      $("resumen").innerHTML = categorias.map(c => {
+        const de = piezas.filter(p => p._cat.slug === c.slug);
+        const ocultas = de.filter(p => !p.visible).length;
+        return `<button type="button" data-cat="${esc(c.slug)}" aria-pressed="${$("filtro-cat").value === c.slug}">
+          <strong>${esc(c.nombre)}</strong>
+          <span class="numero">${de.length}</span>
+          <small>${de.filter(enTienda).length} en la tienda${ocultas ? ` · ${ocultas} ${ocultas === 1 ? "oculta" : "ocultas"}` : ""}</small>
+        </button>`;
+      }).join("");
+    }
+
+    // Busca sin importar mayúsculas ni tildes, en todos los datos de texto de la pieza
+    const normalizar = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+    function pintarLista() {
+      const cat = $("filtro-cat").value;
+      const palabras = normalizar($("buscar").value).split(/\s+/).filter(Boolean);
+      const visibles = piezas.filter(p => {
+        if (cat && p._cat.slug !== cat) return false;
+        const texto = normalizar(Object.values(p).filter(v => typeof v === "string").join(" ") + " " + p._cat.nombre);
+        return palabras.every(w => texto.includes(w));
+      });
+      $("cantidad").textContent = visibles.length + (visibles.length === 1 ? " pieza" : " piezas");
+      if (!visibles.length) {
+        $("lista").innerHTML = `<li class="fila" style="display:block">Ninguna pieza coincide con la búsqueda.</li>`;
+        return;
+      }
+      $("lista").innerHTML = visibles.map(p => {
+        const foto = archivosDe(p)[0];
+        const enlace = `c=${encodeURIComponent(p.collectionName)}&id=${encodeURIComponent(p.id)}`;
+        const etiquetas = [
+          !p.visible ? `<span class="etiqueta oculta">Oculta</span>` : "",
+          p.destino !== DESTINO_VENTA ? `<span class="etiqueta">${esc(p.destino || "Sin Definir")}</span>` : "",
+          p.estado && p.destino === DESTINO_VENTA && p.estado !== "Disponible" ? `<span class="etiqueta">${esc(p.estado)}</span>` : "",
+        ].join("");
+        return `
+        <li class="fila">
+          ${foto ? `<img src="${esc(urlImagen(p, foto, "100x100"))}" alt="" loading="lazy">` : `<span class="sin-foto"></span>`}
+          <div>
+            <div class="titulo">${esc(p.titulo)}${etiquetas}</div>
+            <div class="datos">${esc(p.inventario || "")} · ${esc(p._cat.nombre)}</div>
+          </div>
+          <div class="precio">${esc(formatoPrecio(p))}</div>
+          <div class="acciones">
+            ${enTienda(p) ? `<a class="ver" href="pieza.html?${enlace}" target="_blank">Ver</a>` : ""}
+            <a class="boton chico secundario" href="cargar.html?${enlace}">Modificar</a>
+            <button type="button" class="boton chico peligro" data-eliminar="${esc(p.id)}">Eliminar</button>
+          </div>
+        </li>`;
+      }).join("");
+    }
+
+    $("buscar").addEventListener("input", pintarLista);
+    $("filtro-cat").addEventListener("change", () => { pintarResumen(); pintarLista(); });
+
+    // Las tarjetas del resumen filtran por categoría (otro clic: todas)
+    $("resumen").addEventListener("click", e => {
+      const b = e.target.closest("button[data-cat]");
+      if (!b) return;
+      $("filtro-cat").value = $("filtro-cat").value === b.dataset.cat ? "" : b.dataset.cat;
+      pintarResumen();
+      pintarLista();
+    });
+
+    $("lista").addEventListener("click", async e => {
+      const b = e.target.closest("[data-eliminar]");
+      if (!b) return;
+      const p = piezas.find(x => x.id === b.dataset.eliminar);
+      if (!confirm(`¿Eliminar «${p.titulo}» (${p.inventario})?\n\nSe borra la pieza con todas sus fotos y no se puede deshacer.`)) return;
+      b.disabled = true;
+      try {
+        const r = await fetch(`${PB_URL}/api/collections/${encodeURIComponent(p.collectionName)}/records/${encodeURIComponent(p.id)}`, {
+          method: "DELETE", headers: { Authorization: sesion.token },
+        });
+        if (!r.ok) {
+          b.disabled = false;
+          return avisar(r.status === 401 || r.status === 403
+            ? "Tu sesión venció o no tenés permiso para eliminar. Cerrá sesión y volvé a ingresar."
+            : "No se pudo eliminar la pieza. Probá de nuevo.");
+        }
+        piezas = piezas.filter(x => x !== p);
+        avisar(`«${p.titulo}» se eliminó.`, true);
+        pintarResumen();
+        pintarLista();
+      } catch (err) {
+        console.error(err);
+        b.disabled = false;
+        avisar("No se pudo conectar con el servidor. Revisá la conexión y probá de nuevo.");
+      }
+    });
+
+    // ---------- Inicio ----------
+
+    (async function iniciar() {
+      sesion = await sesionVigente();
+      if (sesion) return abrirPanel();
+      mostrar("vista-ingreso");
+    })();
+  </script>
+</body>
+</html>

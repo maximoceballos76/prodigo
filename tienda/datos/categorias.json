@@ -1,0 +1,38 @@
+[
+ {
+  "collectionId": "pbc_2687480828",
+  "collectionName": "categorias",
+  "created": "2026-10-24 06:28:19.696Z",
+  "descripcion": "Fotografías de la colección",
+  "id": "fcrw6j59wkg8x7l",
+  "nombre": "Fotografías",
+  "orden": 1,
+  "slug": "fotografias",
+  "updated": "2026-10-24 07:25:41.881Z",
+  "visible": true
+ },
+ {
+  "collectionId": "pbc_2687480828",
+  "collectionName": "categorias",
+  "created": "2026-10-25 01:03:58.708Z",
+  "descripcion": "Postales de la colección",
+  "id": "ait12q34b6yzn82",
+  "nombre": "Postales",
+  "orden": 2,
+  "slug": "postales",
+  "updated": "2026-10-25 01:03:58.708Z",
+  "visible": true
+ },
+ {
+  "collectionId": "pbc_2687480828",
+  "collectionName": "categorias",
+  "created": "2026-10-25 01:03:58.709Z",
+  "descripcion": "Máquinas de escribir de la colección",
+  "id": "o8corla1qiq3z3x",
+  "nombre": "Máquinas de escribir",
+  "orden": 3,
+  "slug": "maquinas_de_escribir",
+  "updated": "2026-10-25 01:03:58.709Z",
+  "visible": true
+ }
+]

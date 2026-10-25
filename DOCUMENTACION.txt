@@ -1,0 +1,443 @@
+PRÓDIGO – DOCUMENTACIÓN DEL PROYECTO
+Última actualización: 2026-10-25 (versión de exhibición en GitHub Pages)
+
+Tienda/catálogo web de piezas de un museo. La web es HTML + JavaScript sin
+frameworks ni compilación; los datos y las fotos viven en PocketBase.
+
+
+==============================================================================
+1. CÓMO SE LEVANTA
+==============================================================================
+
+Hacen falta dos procesos (definidos en .claude/launch.json):
+
+  a) PocketBase (base de datos + API + panel), puerto 8090:
+       tienda/pocketbase/pocketbase.exe serve --dir tienda/pocketbase/pb_data
+         --hooksDir tienda/pocketbase/pb_hooks --migrationsDir tienda/pocketbase/pb_migrations
+     Panel de administración: http://127.0.0.1:8090/_/
+
+  b) Servidor web estático de la carpeta tienda/, puerto 5500:
+       python -m http.server 5500 --directory tienda
+     Web: http://127.0.0.1:5500/  (portada; la tienda está en /tienda.html)
+     (Si la web la sirve Five Server desde VS Code, la carpeta servida es la
+     del proyecto: entonces es http://127.0.0.1:5500/tienda/)
+
+La dirección de PocketBase que usa la web está en una sola línea: PB_URL en
+tienda/api.js.
+
+
+==============================================================================
+2. CÓMO SE INGRESA A cargar.html (DECLARACIÓN EXPLÍCITA)
+==============================================================================
+
+DESDE DÓNDE SE ENTRA
+  - NINGUNA página del sitio tiene un enlace a cargar.html. No aparece en
+    index.html (portada), tienda.html ni pieza.html. Es a propósito: es una
+    página interna.
+  - Se entra SOLO escribiendo la dirección a mano en el navegador:
+        http://127.0.0.1:5500/cargar.html
+    (o la misma ruta /cargar.html en el dominio donde se publique la web).
+  - Tiene <meta name="robots" content="noindex"> para que los buscadores no
+    la listen.
+  - Que no esté enlazada NO es la seguridad: la protección real es el login
+    y las reglas de PocketBase (ver más abajo). Cualquiera que conozca la
+    dirección ve la pantalla de ingreso, pero sin cuenta no puede guardar nada.
+  - Desde cargar.html sí se puede volver al sitio: el logo "Pródigo" del
+    encabezado enlaza a la portada (index.html) y el menú a la tienda.
+
+QUIÉN PUEDE USARLA
+  - Cuentas de la colección "editores" de PocketBase (creada por la migración
+    1792910000_editores.js). Las cuentas se crean a mano desde el panel de
+    PocketBase (colección editores > New record: email, contraseña, nombre).
+    Los editores no tienen acceso al panel de administración.
+    Pueden CREAR, MODIFICAR y ELIMINAR piezas (eliminar: migración
+    1792950000_editores_eliminan.js).
+  - También los administradores del panel (_superusers) con su correo y
+    contraseña de administrador.
+
+CÓMO FUNCIONA, PASO A PASO
+  La página tiene tres "vistas" en el mismo archivo; solo se muestra una por
+  vez (función mostrar()):
+
+  1) Al abrir la página (función iniciar()):
+     - Busca una sesión guardada en localStorage, clave "prodigo-sesion".
+     - Si la hay, la renueva contra PocketBase (renovar() -> auth-refresh).
+       Si sigue vigente, va directo al formulario. Si venció, la borra.
+     - Si no hay sesión válida, muestra la vista de INGRESO.
+
+  2) Vista INGRESO (correo + contraseña):
+     - ingresar() prueba primero como "editores" y, si falla, como
+       "_superusers" (POST /api/collections/<colección>/auth-with-password).
+     - Si entra, guarda { token, nombre, coleccion } en localStorage y abre
+       el formulario. Si no, muestra "El correo o la contraseña no son
+       correctos" o un error de conexión.
+
+  3) Vista CARGA (formulario de pieza nueva):
+     - Lo primero es "¿Qué tipo de pieza es?": Fotografía / Postal / Máquina
+       de escribir. El valor elegido ES el nombre de la colección de
+       PocketBase donde se guarda (fotografias / postales /
+       maquinas_de_escribir), y cambia los campos de "Más datos".
+     - Obligatorios: al menos una foto, título, N.º de inventario, medidas.
+     - Fotos: JPG, PNG o WEBP; se eligen o se arrastran; la primera es la del
+       catálogo; se pueden quitar con la ×.
+     - Destino (radio): Venta / Museo Miranda / Museo Ezeiza / Sin Definir
+       ("Todavía no sé", marcado por defecto).
+     - Si el destino es "Venta" aparecen Precio (USD, obligatorio > 0; acepta
+       "1.500,50", "1500.50" o "1500") y Estado (Disponible / Reservada /
+       Vendida).
+     - Descripción, casilla "Mostrar en la web" (visible), y en "Más datos"
+       (un <fieldset class="grupo" data-tipo="..."> por tipo; solo se ve y se
+       envía el del tipo elegido, función mostrarGrupo()):
+         Fotografía:  fotógrafo, fecha, colección, soporte, proceso, inscripciones.
+         Postal:      editorial, fecha, lugar, técnica, color, circulada,
+                      inscripciones.
+         Máquina:     marca, modelo, fecha de fabricación, país de origen,
+                      N.º de serie, teclado, funcionamiento.
+     - Antes de enviar, revisar() valida en el navegador y marca los errores
+       al lado de cada campo.
+     - Se envía con POST /api/collections/<tipo>/records (FormData, con el
+       token en Authorization).
+     - Errores del servidor: 401/403 = sesión vencida o sin permiso; errores
+       por campo (ej. inventario repetido) se muestran en el campo; los
+       errores de los hooks (ej. falta precio para Venta) arriba del form.
+     - Si hay datos sin guardar, avisa antes de cerrar la pestaña o de
+       cerrar sesión.
+     - "Cerrar sesión" borra la sesión guardada y vuelve al ingreso.
+
+  4) Vista LISTO (confirmación):
+     - Muestra la primera foto y dice si la pieza ya aparece en la tienda
+       (solo si visible = sí Y destino = Venta), si quedó guardada pero no
+       está en la tienda, o si quedó oculta.
+     - "Ver en la web" (solo si está en la tienda) abre pieza.html de esa pieza.
+     - "Cargar otra pieza" vuelve al formulario vacío.
+
+MODIFICAR Y ELIMINAR UNA PIEZA (mismo archivo, modo edición)
+  - Se entra con:   cargar.html?c=<colección>&id=<id de la pieza>
+      ej.: cargar.html?c=postales&id=kj3mx94kdo822g1
+    (el id es el de PocketBase; es el mismo que aparece en el link de la
+    ficha: pieza.html?c=postales&id=kj3mx94kdo822g1). Pide el mismo login.
+    Lo normal es llegar desde el panel (admin.html), botón "Modificar".
+  - El título cambia a "Modificar pieza" y el formulario se completa con los
+    datos y las fotos actuales (función cargarPieza()). El tipo de pieza no
+    se puede cambiar (cada tipo es una colección distinta).
+  - "Guardar cambios": PATCH /api/collections/<colección>/records/<id>.
+    Las fotos quitadas con la × se borran del servidor ("imagenes-") y las
+    nuevas se agregan al final ("imagenes+"). Tiene que quedar al menos una.
+  - "Eliminar pieza" (botón rojo, solo en modo edición): pide confirmación y
+    hace DELETE /api/collections/<colección>/records/<id>. Se borra la pieza
+    con todas sus fotos. NO SE PUEDE DESHACER (salvo desde un backup).
+  - Si el id no existe (o la pieza ya se eliminó), avisa "No se encontró la
+    pieza" con un link para cargar una nueva.
+  - Después de guardar o eliminar, la página sale del modo edición y
+    "Cargar otra pieza" abre el formulario vacío.
+
+
+==============================================================================
+2b. PANEL DE ADMINISTRACIÓN (admin.html)
+==============================================================================
+
+DESDE DÓNDE SE ENTRA
+  - Igual que cargar.html: NINGUNA página pública lo enlaza. Se entra
+    escribiendo la dirección:  http://127.0.0.1:5500/tienda/admin.html
+    (en producción: /admin.html del dominio). Tiene noindex.
+  - Desde cargar.html sí hay enlaces al panel ("Panel" arriba y "Volver al
+    panel" después de guardar).
+  - Lo que lo protege es el login: sin una cuenta de editor o administrador
+    solo se ve la pantalla de ingreso, y PocketBase no devuelve ni acepta
+    nada sin sesión.
+  - La sesión es la misma que la de cargar.html (sesion.js): si ya
+    ingresaste en una, la otra entra directo.
+
+QUÉ TIENE
+  - Botón "+ Cargar pieza nueva" (abre cargar.html).
+  - Resumen por categoría: total de piezas, cuántas están en la tienda y
+    cuántas ocultas. Al tocar una tarjeta filtra el listado por esa
+    categoría (otro toque: todas).
+  - LISTADO DE TODAS LAS PIEZAS (también las ocultas y las que no son de
+    Venta), ordenado por N.º de inventario, con foto, título, inventario,
+    categoría, precio y etiquetas (Oculta / destino si no es Venta /
+    Reservada o Vendida).
+  - Buscador: busca en todos los datos de texto de la pieza (título,
+    inventario, descripción, marca, lugar, fotógrafo...), sin importar
+    mayúsculas ni tildes. Varias palabras = tienen que estar todas.
+  - Filtro por categoría.
+  - En cada pieza:
+      Ver        abre la ficha pública (solo si está en la tienda).
+      Modificar  abre cargar.html?c=<colección>&id=<id> (modo edición).
+      Eliminar   pide confirmación y la borra con sus fotos, sin salir del
+                 panel. NO SE PUEDE DESHACER (salvo desde un backup).
+  - Trae hasta 500 piezas por categoría (si alguna crece más, hay que
+    paginar; está marcado con "shortcut:" en el código).
+
+==============================================================================
+3. ARCHIVOS Y QUÉ HACE CADA UNO
+==============================================================================
+
+RAÍZ
+  README.md            Descripción mínima del proyecto.
+  CLAUDE.md            Instrucciones para Claude Code (uso de graphify).
+  DOCUMENTACION.txt    Este archivo.
+  .graphifyignore      Carpetas que graphify no indexa (backups, pb_data,
+                       pocketbase.exe, imgs).
+  .claude/launch.json  Cómo levantar PocketBase (8090) y la web (5500).
+  .claude/settings.json  Configuración local de Claude Code.
+  graphify-out/        Grafo de conocimiento del código (lo genera graphify;
+                       no se edita a mano).
+  backups/             Copias de seguridad de pb_data (la base de datos):
+                         pb_data_20261024_173758
+                         pb_data_20261024_175103_antes_editores
+                         pb_data_20261024_220214_antes_postales_maquinas
+                         pb_data_20261024_235948_antes_color_postales
+                         pb_data_20261025_004215_antes_piezas_ejemplo
+                         pb_data_20261025_010810_antes_eliminar
+                         pb_data_20261025_011910_antes_panel
+                       (cada una es de antes del cambio que dice su nombre).
+
+tienda/  (la web; es la carpeta que se sirve)
+  cabecera.js  ENCABEZADO COMÚN de todas las páginas (index, tienda, pieza,
+               cargar, admin).
+               Cada página tiene <header class="cabecera" id="cabecera"> y
+               justo después <script src="cabecera.js">, que lo completa con:
+               - La marca "Pródigo" (enlaza a la portada, index.html).
+               - El MENÚ DE SECCIONES: sale de la lista SECCIONES. Hoy:
+                 "Inicio" (index.html) y "Tienda" (tienda.html).
+                 PARA AGREGAR UNA SECCIÓN NUEVA: sumar una línea
+                 { id, nombre, href } a SECCIONES y poner
+                 data-seccion="<id>" en el <body> de sus páginas (así queda
+                 marcada como activa en el menú).
+               - El selector de paleta (Papel / Arena / Niebla, tres círculos
+                 de color). Se guarda en localStorage "prodigo-paleta" y se
+                 aplica al cargar cualquier página.
+               El encabezado queda fijo arriba al hacer scroll. En celular el
+               menú baja a una segunda fila. En la portada va transparente,
+               en blanco, encima de la foto (estilos [data-seccion="inicio"]).
+
+  index.html   PORTADA (página de entrada del sitio; sección "inicio").
+               Foto a pantalla completa (imgs/portada.webp) oscurecida con un
+               degradado, y encima: antetítulo, nombre "Pródigo", una frase,
+               el botón principal "Visitar la tienda" (va a tienda.html), un
+               botón "Escribinos" (mailto) y una fila de datos: sedes,
+               horario, entrada y tamaño de la colección. Epígrafe de la foto
+               abajo a la derecha. El texto entra con una animación suave (se
+               desactiva si el sistema pide reducir el movimiento).
+               OJO: los textos, datos y el correo son DE EJEMPLO (marcados con
+               un comentario en el HTML); reemplazarlos por los reales.
+               Estilos: sección "Portada" de style.css.
+
+  tienda.html  CATÁLOGO / TIENDA (sección "tienda"; antes era index.html).
+               - Título "Tienda" y, debajo, las categorías como PESTAÑAS
+                 horizontales con la cantidad de piezas de cada una; al tocar
+                 una filtra la grilla. En celular las pestañas se deslizan.
+               - FILTROS POR ESPECIFICACIÓN: al elegir una categoría aparecen
+                 listas desplegables con sus especificaciones (constante
+                 FILTROS en tienda.html):
+                   Fotografías:  fotógrafo, colección, soporte, proceso.
+                   Postales:     color, lugar, editorial, circulación.
+                   Máquinas:     marca, país de origen, funcionamiento, teclado.
+                 Las opciones de cada lista salen de los valores que tienen
+                 las piezas cargadas (si ninguna pieza tiene el dato, la
+                 lista no aparece). Se pueden combinar; "Quitar filtros" los
+                 borra y al cambiar de categoría se reinician. Para filtrar
+                 por otro campo: sumarlo a FILTROS en la categoría que
+                 corresponda. Conviene que sean campos de lista (select) o
+                 con valores escritos siempre igual: "Olivetti" y "olivetti"
+                 aparecen como dos opciones distintas.
+               - Pide las categorías visibles (listarCategorias) y, por cada
+                 una, sus piezas con destino "Venta" (listarPiezas, usando el
+                 slug de la categoría como nombre de colección).
+               - Cada pieza enlaza a pieza.html?c=<colección>&id=<id>.
+               - Si PocketBase no responde, muestra "No se pudo cargar el
+                 catálogo".
+
+  pieza.html   FICHA DE UNA PIEZA. Se abre con pieza.html?c=<colección>&id=<id>.
+               - Trae la pieza (obtenerPieza) y muestra fotos con miniaturas
+                 para cambiar de vista, título, precio, estado, descripción y
+                 los datos de catalogación que estén completos (lista CAMPOS:
+                 los de fotografías, postales y máquinas de escribir; solo
+                 aparecen los que la pieza tiene cargados).
+               - Botón "Consultar por esta pieza" = mailto a
+                 contacto@ejemplo.com (dirección de ejemplo, falta la real).
+               - Si la pieza no existe o está oculta: "No encontramos esa pieza".
+
+  cargar.html  FORMULARIO INTERNO DE CARGA DE PIEZAS. Ver sección 2.
+
+  admin.html   PANEL DE ADMINISTRACIÓN. Ver sección 2b.
+
+  sesion.js    Login y sesión compartidos por cargar.html y admin.html:
+                 ingresar(correo, clave)  prueba como editor y como admin.
+                 renovar(s)               renueva el token.
+                 sesionVigente()          sesión guardada y renovada, o null.
+                 recordarSesion(s)        guarda (o borra, con null) la sesión
+                                          en localStorage "prodigo-sesion".
+
+  api.js       Funciones compartidas por las tres páginas:
+                 PB_URL           dirección de PocketBase.
+                 DESTINO_VENTA    texto exacto de la opción "Venta".
+                 pb(ruta)         GET a PocketBase; error si no responde bien.
+                 listarCategorias()  categorías visibles, por "orden".
+                 listarPiezas(col)   piezas con destino Venta, más nuevas primero.
+                 obtenerPieza(col, id)  una pieza.
+                 archivosDe(p)    lista de fotos de una pieza.
+                 urlImagen(p, archivo, miniatura)  URL de la foto (o miniatura
+                                  400x0 / 1200x0 / 100x100).
+                 formatoPrecio(p) "USD 1.500".
+                 esc(s)           escapa texto antes de meterlo en el HTML.
+
+  style.css    Estilos de todo el sitio: las tres paletas (data-theme en
+               <body>), encabezado común, pestañas de categorías, grilla,
+               ficha y versión móvil.
+               cargar.html suma estilos propios dentro del archivo.
+
+  piezas.js    DATOS DE EJEMPLO VIEJOS (6 piezas falsas). Ya NO lo usa
+               ninguna página (los datos vienen de PocketBase). Se puede borrar.
+
+  imgs/        Copia local de la foto de cada pieza, con su N.º de inventario
+               como nombre (FOT-0001.jpg, POS-0005.jpg, MAQ-0003.jpg...).
+               También quedan los archivos originales con su nombre viejo
+               (lvm1.webp, chascomus.webp, maquinadeescribir1-3.webp, etc.).
+               Ninguna página las usa directo: ya están subidas a PocketBase.
+               EXCEPCIÓN: portada.webp es el fondo de la portada (index.html).
+               Es "Chascomus-antiguo 1875.jpg" de Wikimedia Commons, dominio
+               público: https://commons.wikimedia.org/wiki/File:Chascomus-antiguo_1875.jpg
+
+tienda/pocketbase/  (servidor y base de datos)
+  pocketbase.exe   El servidor PocketBase.
+  pb_data/         La base de datos y las fotos subidas. NO se edita a mano;
+                   hacer copia en backups/ antes de cambios grandes.
+
+  pb_hooks/  (reglas que corren en el servidor; aplican a las colecciones de
+             piezas: fotografias, postales y maquinas_de_escribir. Si se agrega
+             otra categoría hay que sumarla al final de cada hook.)
+    validar_venta.pb.js  Al crear o editar una pieza llama a venta.js.
+    venta.js             - Sin destino => "Sin Definir".
+                         - Destino "Venta" => exige precio_usd > 0 (si no,
+                           rechaza con mensaje) y, sin estado, pone "Disponible".
+    ocultar_inventario.pb.js  El N.º de inventario es interno: no se devuelve
+                         a la web pública, solo a administradores y editores.
+
+  pb_migrations/  (historia de la estructura de la base, en orden)
+    1792823200_created_categorias.js  Crea la colección "categorias".
+    1792825305_created_fotografias.js Crea la colección "fotografias".
+    1792826365 / 1792879048 / 1792879214_updated_fotografias.js
+                                      Ajustes de campos de fotografias
+                                      (precio_usd, destino, se quitan/renombran
+                                      lugar, fondo, procedencia, ruta_tiles).
+    1792826779_updated_categorias.js  Las categorías solo se ven si visible = true.
+    1792900000_simplificar_carga.js   Ordena los campos y pone ayudas en el
+                                      panel; fotos JPG/PNG/WEBP, máx. 50 MB,
+                                      miniaturas 100x100, 400x0, 1200x0.
+    1792910000_editores.js            Crea la colección "editores" y les da
+                                      permiso de crear y editar fotografias y
+                                      de ver también las piezas ocultas.
+    1792920000_postales_maquinas.js   Crea las colecciones "postales" y
+                                      "maquinas_de_escribir" (mismos campos
+                                      comunes y permisos que fotografias, más
+                                      los propios) y sus categorías en el menú
+                                      (orden 2 y 3).
+    1792930000_postales_color.js      Agrega a postales el campo "color"
+                                      (lista, para el filtro de la tienda) y
+                                      lo completa en las 4 postales cargadas.
+    1792940000_fuente.js              Agrega el campo interno "fuente" (oculto:
+                                      solo lo ven los administradores) a las
+                                      tres colecciones de piezas.
+    1792950000_editores_eliminan.js   Los editores pueden eliminar piezas de
+                                      las tres colecciones (antes solo los
+                                      administradores).
+    1792960000_editores_listan_ocultas.js  Los editores pueden LISTAR las
+                                      piezas ocultas (para el panel). El
+                                      público sigue viendo solo las visibles.
+
+  Las migraciones nuevas se aplican al reiniciar PocketBase.
+
+
+==============================================================================
+4. DATOS EN POCKETBASE
+==============================================================================
+
+  categorias   nombre, slug, descripcion, orden, visible. El slug ES el
+               nombre de la colección de piezas que muestra la categoría.
+               Hoy: Fotografías (1), Postales (2), Máquinas de escribir (3).
+
+  CÓMO AGREGAR UNA CATEGORÍA: crear su colección de piezas (con los campos
+  comunes), su registro en categorias, sumarla a los dos hooks, a las
+  opciones de "tipo" en cargar.html y sus campos propios a CAMPOS en
+  pieza.html. Ver 1792920000_postales_maquinas.js como ejemplo.
+
+  Campos comunes a todas las colecciones de piezas:
+               imagenes, titulo*, inventario* (único dentro de la colección),
+               destino, precio_usd, estado, visible, descripcion, medidas*.
+               (* obligatorio)
+  fotografias  + fotografo, fecha, coleccion, soporte, proceso,
+               inscripciones, archivo_master.
+  postales     + editorial, fecha, lugar, tecnica, color (Blanco y negro /
+               Un solo tono (sepia, azul) / Color / Coloreada a mano),
+               circulada (Circulada / Sin circular), inscripciones.
+  maquinas_de_escribir
+               + marca, modelo, fecha, origen, numero_serie, teclado,
+               funcionamiento (Funciona / Funciona con fallas / No funciona /
+               Sin probar).
+  editores     email, contraseña, nombre (cuentas para cargar.html).
+
+  Qué ve la web pública: categorías con visible = true; piezas con
+  visible = true (y en el catálogo, solo las de destino "Venta").
+
+
+==============================================================================
+5. NUMERACIÓN DE PIEZAS Y PIEZAS DE EJEMPLO
+==============================================================================
+
+  N.º DE INVENTARIO: prefijo por categoría + 4 cifras.
+      FOT-0001...  fotografías
+      POS-0001...  postales
+      MAQ-0001...  máquinas de escribir
+  La foto de cada pieza se nombra igual que su inventario (FOT-0003.jpg).
+  PocketBase guarda el archivo en minúsculas, con "_" y un sufijo al azar
+  (fot_0003_ifm4dip7ox.jpg); es su forma de evitar nombres repetidos.
+
+  PIEZAS DE EJEMPLO DEL PROTOTIPO (cargadas el 2026-10-25):
+  FOT-0003 a 0008, POS-0005 a 0010 y MAQ-0003 a 0008. Las imágenes son de
+  Wikimedia Commons (dominio público o licencias libres). Las fechas,
+  lugares, técnicas, marcas y modelos corresponden a lo que muestra cada
+  imagen; los fotógrafos, colecciones ("Fondo Bixio", "Colección Arrieta",
+  "Archivo Ferrari Lagos"), editoriales ("Casa Moretti Hnos.", "Ediciones
+  Del Plata", "Ediciones Larrañaga"), números de serie, estado de
+  funcionamiento y precios son INVENTADOS para el prototipo.
+  El origen real de cada imagen (archivo, autor, licencia y link) está en el
+  campo interno "fuente" de cada pieza (panel de PocketBase).
+  Antes de publicar el sitio: reemplazarlas por piezas reales o borrarlas.
+  Las que tienen licencia CC BY / CC BY-SA (MAQ-0006, MAQ-0007, MAQ-0008)
+  exigen citar al autor si se publican.
+
+
+==============================================================================
+6. VERSIÓN DE EXHIBICIÓN EN GITHUB PAGES (prototipo publicado)
+==============================================================================
+
+  Dirección: https://maximoceballos76.github.io/prodigo/
+
+  GitHub Pages solo sirve archivos fijos: no puede correr PocketBase. Por eso
+  la versión publicada es de SOLO LECTURA:
+    - Funcionan: portada, tienda, filtros y fichas de pieza.
+    - NO funcionan: cargar.html, admin.html (login, carga, modificar,
+      eliminar). Siguen funcionando en la computadora con PocketBase.
+
+  CÓMO FUNCIONA
+  - tienda/api.js detecta si la página corre en *.github.io (MODO_DEMO) y en
+    ese caso lee tienda/datos/*.json en vez de llamar a PocketBase; las
+    fotos salen de tienda/datos/fotos/<id de la pieza>/.
+  - tienda/datos/ lo genera exportar_demo.py (en la raíz del proyecto) a
+    partir de la API PÚBLICA de PocketBase: solo piezas visibles, sin N.º de
+    inventario ni campo fuente.
+  - Las 3 fotos con licencia Creative Commons (Royal 10, Underwood No. 5,
+    Remington portátil) muestran el crédito del autor en la ficha (campo
+    "credito", lista CREDITOS en exportar_demo.py). Es obligatorio por la
+    licencia al publicarlas.
+  - .github/workflows/pages.yml publica la carpeta tienda/ (sin
+    tienda/pocketbase/) en GitHub Pages en cada push a main.
+  - .gitignore impide subir la base de datos (pb_data), los backups y
+    pocketbase.exe.
+
+  PARA ACTUALIZAR LA DEMO CON LOS DATOS NUEVOS
+    1. Con PocketBase corriendo:   python exportar_demo.py
+    2. Subir los cambios (commit + push a main). En 1-2 minutos se publica.
+

@@ -1,0 +1,4 @@
+{
+  // PocketBase escribe en pb_data con cada visita (logs): sin esto, Five Server cree que cambió el sitio
+  "fiveServer.ignore": ["**/pocketbase/pb_data/**", "**/backups/**"]
+}

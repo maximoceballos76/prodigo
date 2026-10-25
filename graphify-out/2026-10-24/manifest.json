@@ -1,0 +1,122 @@
+{
+  ".claude/launch.json": {
+    "mtime": 1792873789.0037436,
+    "seen": 1792882495.173669,
+    "ast_hash": "97b5407c81fa4f8a444f8dfbbf5593d3",
+    "semantic_hash": "97b5407c81fa4f8a444f8dfbbf5593d3"
+  },
+  ".claude/settings.json": {
+    "mtime": 1792877649.9837818,
+    "seen": 1792882495.1736782,
+    "ast_hash": "896be6af8071102341bd225d74e23cf2",
+    "semantic_hash": "896be6af8071102341bd225d74e23cf2"
+  },
+  "ale/api.js": {
+    "mtime": 1792826838.9638743,
+    "seen": 1792882495.1736832,
+    "ast_hash": "41eedbbbc8e4b281f28e6977acc64ab7",
+    "semantic_hash": "41eedbbbc8e4b281f28e6977acc64ab7"
+  },
+  "ale/piezas.js": {
+    "mtime": 1792799149.900172,
+    "seen": 1792882495.173687,
+    "ast_hash": "2b0c90cd6c709e99aaf1ba6ff3d752de",
+    "semantic_hash": "2b0c90cd6c709e99aaf1ba6ff3d752de"
+  },
+  "ale/pocketbase/pb_hooks/validar_venta.pb.js": {
+    "mtime": 1792826108.3906465,
+    "seen": 1792882495.1736937,
+    "ast_hash": "94e033a6ff618e60e184bbad605d7904",
+    "semantic_hash": "94e033a6ff618e60e184bbad605d7904"
+  },
+  "ale/pocketbase/pb_hooks/venta.js": {
+    "mtime": 1792874347.5275977,
+    "seen": 1792882495.1736965,
+    "ast_hash": "8ecb3c314822120108359dfdc844b22b",
+    "semantic_hash": "8ecb3c314822120108359dfdc844b22b"
+  },
+  "ale/pocketbase/pb_migrations/1792823200_created_categorias.js": {
+    "mtime": 1792823200.783309,
+    "seen": 1792882495.1736991,
+    "ast_hash": "042a66e9856e942a5aeaee98798887d4",
+    "semantic_hash": "042a66e9856e942a5aeaee98798887d4"
+  },
+  "ale/pocketbase/pb_migrations/1792825305_created_fotografias.js": {
+    "mtime": 1792825305.2742076,
+    "seen": 1792882495.173702,
+    "ast_hash": "acfef1cd6204b0616b27acbd40a34274",
+    "semantic_hash": "acfef1cd6204b0616b27acbd40a34274"
+  },
+  "ale/pocketbase/pb_migrations/1792826365_updated_fotografias.js": {
+    "mtime": 1792826365.1498053,
+    "seen": 1792882495.1737041,
+    "ast_hash": "7d427621bbd5dbeb1433c64f5a7794dc",
+    "semantic_hash": "7d427621bbd5dbeb1433c64f5a7794dc"
+  },
+  "ale/pocketbase/pb_migrations/1792826779_updated_categorias.js": {
+    "mtime": 1792826779.422372,
+    "seen": 1792882495.1737068,
+    "ast_hash": "7cdbdfbca6da2ef9c5a0399a633582b3",
+    "semantic_hash": "7cdbdfbca6da2ef9c5a0399a633582b3"
+  },
+  "ale/pocketbase/pb_migrations/1792900000_simplificar_carga.js": {
+    "mtime": 1792879431.8420644,
+    "seen": 1792882495.1737146,
+    "ast_hash": "084b43f6f94666a6826b91d247d6286b",
+    "semantic_hash": "084b43f6f94666a6826b91d247d6286b"
+  },
+  "ale/pocketbase/pb_migrations/1792910000_editores.js": {
+    "mtime": 1792874869.4629364,
+    "seen": 1792882495.1737173,
+    "ast_hash": "fa1152c8523d6613577b25403af6b5a3",
+    "semantic_hash": "fa1152c8523d6613577b25403af6b5a3"
+  },
+  "CLAUDE.md": {
+    "mtime": 1792877649.9703836,
+    "seen": 1792882495.1737201,
+    "ast_hash": "67d88e9d0760c3ba54c75dfd9551c1c5",
+    "semantic_hash": "67d88e9d0760c3ba54c75dfd9551c1c5"
+  },
+  "README.md": {
+    "mtime": 1792799149.8986359,
+    "seen": 1792882495.1737225,
+    "ast_hash": "db9feac6ca40ec8b9db672878afab06c",
+    "semantic_hash": "db9feac6ca40ec8b9db672878afab06c"
+  },
+  "ale/cargar.html": {
+    "mtime": 1792879421.7141507,
+    "seen": 1792882495.1737251,
+    "ast_hash": "61dc18eda29ebd0fb241f04da485151e",
+    "semantic_hash": "61dc18eda29ebd0fb241f04da485151e"
+  },
+  "ale/index.html": {
+    "mtime": 1792879422.0940168,
+    "seen": 1792882495.1737278,
+    "ast_hash": "676ac253b6eb75794dc7fe5165acf686",
+    "semantic_hash": "676ac253b6eb75794dc7fe5165acf686"
+  },
+  "ale/pieza.html": {
+    "mtime": 1792881738.3241456,
+    "seen": 1792882495.1737304,
+    "ast_hash": "50883b9e1b76759611a14313754ec979",
+    "semantic_hash": "50883b9e1b76759611a14313754ec979"
+  },
+  "ale/pocketbase/pb_migrations/1792879048_updated_fotografias.js": {
+    "mtime": 1792879048.9810646,
+    "seen": 1792882495.1737094,
+    "ast_hash": "aee838513b41aa45193f8ef54294f3fd",
+    "semantic_hash": "aee838513b41aa45193f8ef54294f3fd"
+  },
+  "ale/pocketbase/pb_migrations/1792879214_updated_fotografias.js": {
+    "mtime": 1792879214.5023267,
+    "seen": 1792882495.173712,
+    "ast_hash": "b3504d1b3aa20c87b855c14a5b54e9cc",
+    "semantic_hash": "b3504d1b3aa20c87b855c14a5b54e9cc"
+  },
+  "ale/pocketbase/pb_hooks/ocultar_inventario.pb.js": {
+    "mtime": 1792881772.7603333,
+    "seen": 1792882495.1736906,
+    "ast_hash": "fcabef5036305803d0a0088d5a1387ad",
+    "semantic_hash": "fcabef5036305803d0a0088d5a1387ad"
+  }
+}

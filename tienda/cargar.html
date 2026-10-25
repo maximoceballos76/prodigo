@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pródigo – Cargar pieza</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .carga { max-width: 40rem; margin: 0 auto; padding: 2rem clamp(1rem, 4vw, 3rem) 5rem; }
+    .carga h1 { font-family: "Newsreader", Georgia, serif; font-weight: 500; font-size: 2rem; margin-bottom: 0.25rem; }
+    .carga .intro { color: var(--tinta-suave); margin-bottom: 2rem; }
+    .sesion { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.9rem; color: var(--tinta-suave); margin-bottom: 1.5rem; }
+    .sesion a { color: var(--tinta-suave); }
+    .sesion button { background: none; border: 0; color: var(--tinta-suave); text-decoration: underline; cursor: pointer; font: inherit; }
+
+    .campo { margin-bottom: 1.5rem; }
+    .campo > label, .campo > legend { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+    .campo .ayuda { display: block; font-size: 0.85rem; color: var(--tinta-suave); margin: -0.2rem 0 0.4rem; }
+    .obligatorio { color: var(--acento); font-weight: 400; font-size: 0.85rem; }
+    fieldset.campo, fieldset.grupo { border: 0; padding: 0; margin: 0; min-width: 0; }
+
+    .carga input[type=text], .carga input[type=email], .carga input[type=password], .carga textarea, .carga select {
+      width: 100%; font: inherit; color: var(--tinta); background: var(--superficie);
+      border: 1px solid var(--linea); border-radius: 6px; padding: 0.7rem 0.8rem; font-size: 1.05rem;
+    }
+    .carga textarea { min-height: 7rem; resize: vertical; }
+    .carga input:focus, .carga textarea:focus, .carga select:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
+    .campo.con-error input, .campo.con-error textarea, .campo.con-error .zona { border-color: #a3322b; }
+    .error { color: #a3322b; font-size: 0.9rem; margin-top: 0.35rem; }
+
+    .opciones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .opciones label {
+      display: flex; align-items: center; gap: 0.45rem; cursor: pointer;
+      background: var(--superficie); border: 1px solid var(--linea); border-radius: 999px; padding: 0.5rem 1rem;
+    }
+    .opciones label:has(input:checked) { border-color: var(--acento); box-shadow: inset 0 0 0 1px var(--acento); }
+    .opciones input { accent-color: var(--acento); }
+
+    .precio { display: flex; align-items: center; gap: 0.5rem; max-width: 14rem; }
+    .precio span { font-weight: 600; color: var(--tinta-suave); }
+
+    .campo > .zona {
+      display: grid; place-items: center; text-align: center; gap: 0.25rem;
+      border: 2px dashed var(--linea); border-radius: 10px; background: var(--superficie);
+      padding: 2rem 1rem; cursor: pointer; color: var(--tinta-suave); font-weight: 400;
+    }
+    .zona strong { color: var(--tinta); font-size: 1.05rem; }
+    .zona.encima { border-color: var(--acento); }
+    .zona input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.75rem; margin-top: 0.75rem; }
+    .foto { position: relative; }
+    .foto img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; display: block; background: var(--placa); }
+    .foto small { display: block; font-size: 0.75rem; color: var(--tinta-suave); margin-top: 0.2rem; }
+    .foto button {
+      position: absolute; top: 0.3rem; right: 0.3rem; width: 1.8rem; height: 1.8rem; border-radius: 50%;
+      border: 0; background: rgba(0,0,0,.65); color: #fff; font-size: 1.1rem; line-height: 1; cursor: pointer;
+    }
+
+    .campo > .casilla { font-weight: 400; }
+    .casilla { display: flex; gap: 0.6rem; align-items: flex-start; cursor: pointer; }
+    .casilla input { width: 1.25rem; height: 1.25rem; margin-top: 0.15rem; accent-color: var(--acento); }
+
+    details.mas { border-top: 1px solid var(--linea); border-bottom: 1px solid var(--linea); padding: 1rem 0; margin-bottom: 2rem; }
+    details.mas summary { cursor: pointer; font-weight: 600; }
+    details.mas summary small { font-weight: 400; color: var(--tinta-suave); }
+    details.mas[open] summary { margin-bottom: 1.25rem; }
+    .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+    @media (max-width: 520px) { .dos { grid-template-columns: 1fr; } }
+
+    .carga .boton { border: 0; font: inherit; font-size: 1.05rem; padding: 0.85rem 1.6rem; cursor: pointer; }
+    .carga .boton[disabled] { opacity: 0.6; cursor: wait; }
+    .boton.secundario { background: transparent; color: var(--acento); box-shadow: inset 0 0 0 1px var(--acento); }
+    .botones { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .boton.peligro { background: transparent; color: #a3322b; box-shadow: inset 0 0 0 1px #a3322b; }
+    .aviso { background: #f6e3df; color: #6e231d; border-radius: 8px; padding: 0.8rem 1rem; margin-bottom: 1.5rem; }
+    .listo { text-align: center; padding: 2rem 0; }
+    .listo img { width: 160px; aspect-ratio: 1; object-fit: cover; border-radius: 8px; margin-bottom: 1rem; }
+    .listo .acciones { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body data-theme="papel">
+
+  <header class="cabecera" id="cabecera"></header>
+  <script src="cabecera.js"></script>
+
+  <main class="carga">
+
+    <!-- 1. Ingreso -->
+    <section id="vista-ingreso" hidden>
+      <h1>Ingresar</h1>
+      <p class="intro">Usá el correo y la contraseña que te dieron para cargar piezas.</p>
+      <div class="aviso" id="error-ingreso" role="alert" hidden></div>
+      <form id="form-ingreso">
+        <div class="campo">
+          <label for="correo">Correo</label>
+          <input type="email" id="correo" autocomplete="username" required>
+        </div>
+        <div class="campo">
+          <label for="clave">Contraseña</label>
+          <input type="password" id="clave" autocomplete="current-password" required>
+        </div>
+        <button class="boton" type="submit">Ingresar</button>
+      </form>
+    </section>
+
+    <!-- 2. Formulario -->
+    <section id="vista-carga" hidden>
+      <div class="sesion"><span id="quien"></span><span><a href="admin.html">Panel</a> · <button type="button" id="salir">Cerrar sesión</button></span></div>
+      <h1 id="titulo-carga">Cargar una pieza nueva</h1>
+      <p class="intro">Completá lo que sepas. Solo la foto, el título, el número de inventario y las medidas son obligatorios.</p>
+      <div class="aviso" id="error-general" role="alert" hidden></div>
+
+      <form id="form-pieza" novalidate>
+        <fieldset class="campo">
+          <legend>¿Qué tipo de pieza es?</legend>
+          <div class="opciones">
+            <label><input type="radio" name="tipo" value="fotografias" checked> Fotografía</label>
+            <label><input type="radio" name="tipo" value="postales"> Postal</label>
+            <label><input type="radio" name="tipo" value="maquinas_de_escribir"> Máquina de escribir</label>
+          </div>
+        </fieldset>
+
+        <div class="campo" data-campo="imagenes">
+          <label>Fotos <span class="obligatorio">obligatorio</span></label>
+          <span class="ayuda">La primera foto es la que se ve en el catálogo.</span>
+          <label class="zona" id="zona">
+            <input type="file" id="archivos" accept="image/jpeg,image/png,image/webp" multiple>
+            <strong>Elegir fotos</strong>
+            <span>o arrastralas acá (JPG, PNG o WEBP)</span>
+          </label>
+          <div class="fotos" id="fotos"></div>
+        </div>
+
+        <div class="campo" data-campo="titulo">
+          <label for="titulo">Título <span class="obligatorio">obligatorio</span></label>
+          <span class="ayuda">Como se va a ver en la web. Ej: Retrato de Lucio V. Mansilla</span>
+          <input type="text" id="titulo" name="titulo">
+        </div>
+
+        <div class="campo" data-campo="inventario">
+          <label for="inventario">N.º de inventario <span class="obligatorio">obligatorio</span></label>
+          <span class="ayuda">Distinto para cada pieza. Ej: img-446</span>
+          <input type="text" id="inventario" name="inventario" autocomplete="off">
+        </div>
+
+        <div class="campo" data-campo="medidas">
+          <label for="medidas">Medidas <span class="obligatorio">obligatorio</span></label>
+          <span class="ayuda">Alto x ancho en cm. Ej: 18 x 24 cm</span>
+          <input type="text" id="medidas" name="medidas">
+        </div>
+
+        <fieldset class="campo" data-campo="destino">
+          <legend>¿A dónde va la pieza?</legend>
+          <div class="opciones">
+            <label><input type="radio" name="destino" value="Venta"> Venta</label>
+            <label><input type="radio" name="destino" value="Museo Miranda"> Museo Miranda</label>
+            <label><input type="radio" name="destino" value="Museo Ezeiza"> Museo Ezeiza</label>
+            <label><input type="radio" name="destino" value="Sin Definir" checked> Todavía no sé</label>
+          </div>
+        </fieldset>
+
+        <div id="bloque-venta" hidden>
+          <div class="campo" data-campo="precio_usd">
+            <label for="precio">Precio <span class="obligatorio">obligatorio para la venta</span></label>
+            <div class="precio"><span>USD</span><input type="text" id="precio" inputmode="decimal" placeholder="0,00"></div>
+          </div>
+          <fieldset class="campo" data-campo="estado">
+            <legend>Estado</legend>
+            <div class="opciones">
+              <label><input type="radio" name="estado" value="Disponible" checked> Disponible</label>
+              <label><input type="radio" name="estado" value="Reservada"> Reservada</label>
+              <label><input type="radio" name="estado" value="Vendida"> Vendida</label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="campo" data-campo="descripcion">
+          <label for="descripcion">Descripción</label>
+          <span class="ayuda">Historia y datos interesantes de la pieza.</span>
+          <textarea id="descripcion" name="descripcion"></textarea>
+        </div>
+
+        <div class="campo">
+          <label class="casilla"><input type="checkbox" id="visible" checked>
+            <span><strong>Mostrar en la web</strong><br><span class="ayuda" style="margin:0">Destildala si todavía no querés que se vea.</span></span>
+          </label>
+        </div>
+
+        <details class="mas">
+          <summary>Más datos de la pieza <small>(opcional)</small></summary>
+          <!-- Un grupo por tipo de pieza; solo se envía el del tipo elegido -->
+          <fieldset class="grupo" data-tipo="fotografias">
+          <div class="dos">
+            <div class="campo" data-campo="fotografo"><label for="fotografo">Fotógrafo</label>
+              <select id="fotografo" name="fotografo">
+                <option value="">Sin indicar</option>
+                <option>Bixio Fundador</option>
+                <option>E. Bixio</option>
+                <option>Se desconoce</option>
+                <option>Otros</option>
+              </select>
+            </div>
+            <div class="campo" data-campo="fecha"><label for="fecha">Fecha</label><input type="text" id="fecha" name="fecha" placeholder="Ej: 1895 o c. 1900"></div>
+            <div class="campo" data-campo="coleccion"><label for="coleccion">Colección</label><input type="text" id="coleccion" name="coleccion" placeholder="Ej: Bixio Fundador"></div>
+            <div class="campo" data-campo="soporte"><label for="soporte">Soporte</label><input type="text" id="soporte" name="soporte" placeholder="Ej: positivo en papel"></div>
+            <div class="campo" data-campo="proceso"><label for="proceso">Proceso</label><input type="text" id="proceso" name="proceso" placeholder="Ej: original"></div>
+          </div>
+          <div class="campo" data-campo="inscripciones"><label for="inscripciones">Inscripciones</label><input type="text" id="inscripciones" name="inscripciones" placeholder="Sellos, dedicatorias, textos escritos"></div>
+          </fieldset>
+
+          <fieldset class="grupo" data-tipo="postales" disabled hidden>
+          <div class="dos">
+            <div class="campo" data-campo="editorial"><label for="editorial">Editorial</label><input type="text" id="editorial" name="editorial" placeholder="Ej: Peuser"></div>
+            <div class="campo" data-campo="fecha"><label for="fecha-postal">Fecha</label><input type="text" id="fecha-postal" name="fecha" placeholder="Ej: 1905 o c. 1910"></div>
+            <div class="campo" data-campo="lugar"><label for="lugar">Lugar</label><input type="text" id="lugar" name="lugar" placeholder="Ej: Plaza de Mayo, Buenos Aires"></div>
+            <div class="campo" data-campo="tecnica"><label for="tecnica">Técnica</label><input type="text" id="tecnica" name="tecnica" placeholder="Ej: fototipia, litografía"></div>
+            <div class="campo" data-campo="color"><label for="color">Color</label>
+              <select id="color" name="color">
+                <option value="">Sin indicar</option>
+                <option>Blanco y negro</option>
+                <option>Un solo tono (sepia, azul)</option>
+                <option>Color</option>
+                <option>Coloreada a mano</option>
+              </select>
+            </div>
+            <div class="campo" data-campo="circulada"><label for="circulada">¿Circuló por correo?</label>
+              <select id="circulada" name="circulada">
+                <option value="">Sin indicar</option>
+                <option>Circulada</option>
+                <option>Sin circular</option>
+              </select>
+            </div>
+          </div>
+          <div class="campo" data-campo="inscripciones"><label for="inscripciones-postal">Inscripciones</label><input type="text" id="inscripciones-postal" name="inscripciones" placeholder="Texto manuscrito, sellos, matasellos"></div>
+          </fieldset>
+
+          <fieldset class="grupo" data-tipo="maquinas_de_escribir" disabled hidden>
+          <div class="dos">
+            <div class="campo" data-campo="marca"><label for="marca">Marca</label><input type="text" id="marca" name="marca" placeholder="Ej: Olivetti, Remington"></div>
+            <div class="campo" data-campo="modelo"><label for="modelo">Modelo</label><input type="text" id="modelo" name="modelo" placeholder="Ej: Lettera 32"></div>
+            <div class="campo" data-campo="fecha"><label for="fecha-maquina">Fecha de fabricación</label><input type="text" id="fecha-maquina" name="fecha" placeholder="Ej: 1963 o c. 1920"></div>
+            <div class="campo" data-campo="origen"><label for="origen">País de origen</label><input type="text" id="origen" name="origen" placeholder="Ej: Italia"></div>
+            <div class="campo" data-campo="numero_serie"><label for="numero_serie">N.º de serie</label><input type="text" id="numero_serie" name="numero_serie"></div>
+            <div class="campo" data-campo="teclado"><label for="teclado">Teclado</label><input type="text" id="teclado" name="teclado" placeholder="Ej: QWERTY, español"></div>
+          </div>
+          <div class="campo" data-campo="funcionamiento"><label for="funcionamiento">Funcionamiento</label>
+            <select id="funcionamiento" name="funcionamiento">
+              <option value="">Sin indicar</option>
+              <option>Funciona</option>
+              <option>Funciona con fallas</option>
+              <option>No funciona</option>
+              <option>Sin probar</option>
+            </select>
+          </div>
+          </fieldset>
+        </details>
+
+        <div class="botones">
+          <button class="boton" type="submit" id="guardar">Guardar pieza</button>
+          <button class="boton peligro" type="button" id="eliminar" hidden>Eliminar pieza</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 3. Confirmación -->
+    <section id="vista-listo" class="listo" hidden>
+      <img id="listo-img" alt="">
+      <h1 id="listo-titulo">¡Pieza guardada!</h1>
+      <p class="intro" id="listo-texto"></p>
+      <div class="acciones">
+        <button class="boton" type="button" id="otra">Cargar otra pieza</button>
+        <a class="boton secundario" href="admin.html">Volver al panel</a>
+        <a class="boton secundario" id="ver" href="#">Ver en la web</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="api.js"></script>
+  <script src="sesion.js"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+    let sesion = null;   // { token, nombre, coleccion }
+    let fotos = [];      // en orden: { archivo, vista } si es nueva, { guardada, vista } si ya estaba en el servidor
+    let quitadas = [];   // nombres de fotos ya guardadas que se quitaron (solo al modificar)
+    let sinGuardar = false;
+
+    // Modificar / eliminar: cargar.html?c=<colección>&id=<id> abre esa pieza en el formulario
+    const params = new URLSearchParams(location.search);
+    let edicion = params.get("id") ? { coleccion: params.get("c") || "", id: params.get("id"), titulo: "" } : null;
+
+    function salirDeEdicion() {
+      edicion = null;
+      history.replaceState(null, "", "cargar.html");
+    }
+
+    function mostrar(vista) {
+      ["vista-ingreso", "vista-carga", "vista-listo"].forEach(v => $(v).hidden = v !== vista);
+      window.scrollTo(0, 0);
+    }
+
+    // ---------- Sesión ----------
+
+    // ingresar(), renovar() y la sesión guardada están en sesion.js
+    function guardarSesion(s) {
+      sesion = s;
+      recordarSesion(s);
+    }
+
+    $("form-ingreso").addEventListener("submit", async e => {
+      e.preventDefault();
+      const boton = e.submitter;
+      boton.disabled = true;
+      $("error-ingreso").hidden = true;
+      try {
+        const s = await ingresar($("correo").value.trim(), $("clave").value);
+        if (!s) {
+          $("error-ingreso").textContent = "El correo o la contraseña no son correctos.";
+          $("error-ingreso").hidden = false;
+          return;
+        }
+        guardarSesion(s);
+        $("clave").value = "";
+        abrirFormulario();
+      } catch (err) {
+        console.error(err);
+        $("error-ingreso").textContent = "No se pudo conectar con el servidor. Probá de nuevo en un momento.";
+        $("error-ingreso").hidden = false;
+      } finally {
+        boton.disabled = false;
+      }
+    });
+
+    $("salir").addEventListener("click", () => {
+      if (sinGuardar && !confirm("Hay datos sin guardar. ¿Cerrar sesión igual?")) return;
+      guardarSesion(null);
+      limpiarFormulario();
+      mostrar("vista-ingreso");
+    });
+
+    async function abrirFormulario() {
+      $("quien").textContent = "Ingresaste como " + sesion.nombre;
+      $("titulo-carga").textContent = edicion ? "Modificar pieza" : "Cargar una pieza nueva";
+      $("guardar").textContent = edicion ? "Guardar cambios" : "Guardar pieza";
+      $("eliminar").hidden = !edicion;
+      // Una pieza no cambia de tipo: cada tipo es una colección distinta en PocketBase
+      form.querySelectorAll("input[name=tipo]").forEach(r => r.disabled = !!edicion);
+      form.hidden = false;
+      mostrar("vista-carga");
+      if (edicion) await cargarPieza();
+      $("titulo").focus();
+    }
+
+    async function cargarPieza() {
+      limpiarFormulario();
+      let p;
+      try {
+        const r = await fetch(`${PB_URL}/api/collections/${encodeURIComponent(edicion.coleccion)}/records/${encodeURIComponent(edicion.id)}`,
+          { headers: { Authorization: sesion.token } });
+        if (!r.ok) throw new Error("PocketBase respondió " + r.status);
+        p = await r.json();
+      } catch (err) {
+        console.error(err);
+        form.hidden = true;
+        $("error-general").innerHTML = 'No se encontró la pieza: puede que se haya eliminado o que el enlace esté incompleto. <a href="cargar.html">Cargar una pieza nueva</a>';
+        $("error-general").hidden = false;
+        return;
+      }
+      edicion.titulo = p.titulo;
+      form.querySelector(`input[name=tipo][value="${p.collectionName}"]`).checked = true;
+      mostrarGrupo();
+      form.querySelectorAll("input[type=text][name]:enabled, textarea[name]:enabled, select[name]:enabled").forEach(el => el.value = p[el.name] ?? "");
+      const radioDestino = form.querySelector(`input[name=destino][value="${p.destino}"]`);
+      if (radioDestino) radioDestino.checked = true;
+      const radioEstado = form.querySelector(`input[name=estado][value="${p.estado}"]`);
+      if (radioEstado) radioEstado.checked = true;
+      $("precio").value = p.precio_usd ? String(p.precio_usd).replace(".", ",") : "";
+      $("visible").checked = !!p.visible;
+      $("bloque-venta").hidden = destino() !== "Venta";
+      fotos = archivosDe(p).map(nombre => ({ guardada: nombre, vista: urlImagen(p, nombre, "100x100") }));
+      pintarFotos();
+      sinGuardar = false;
+    }
+
+    // ---------- Fotos ----------
+
+    function pintarFotos() {
+      $("fotos").innerHTML = fotos.map((f, i) => `
+        <div class="foto">
+          <img src="${f.vista}" alt="">
+          <button type="button" data-quitar="${i}" aria-label="Quitar foto ${i + 1}">×</button>
+          <small>${i === 0 ? "Principal" : "Foto " + (i + 1)}</small>
+        </div>`).join("");
+    }
+
+    function agregarFotos(lista) {
+      const validas = [...lista].filter(f => /^image\/(jpeg|png|webp)$/.test(f.type));
+      if (validas.length < lista.length) alert("Algunos archivos no son fotos JPG, PNG o WEBP y no se agregaron.");
+      validas.forEach(f => fotos.push({ archivo: f, vista: URL.createObjectURL(f) }));
+      if (validas.length) { sinGuardar = true; limpiarError("imagenes"); }
+      pintarFotos();
+    }
+
+    $("archivos").addEventListener("change", e => { agregarFotos(e.target.files); e.target.value = ""; });
+    $("fotos").addEventListener("click", e => {
+      const b = e.target.closest("[data-quitar]");
+      if (!b) return;
+      const [quitada] = fotos.splice(Number(b.dataset.quitar), 1);
+      if (quitada.guardada) quitadas.push(quitada.guardada); else URL.revokeObjectURL(quitada.vista);
+      sinGuardar = true;
+      pintarFotos();
+    });
+    ["dragenter", "dragover"].forEach(t => $("zona").addEventListener(t, e => { e.preventDefault(); $("zona").classList.add("encima"); }));
+    ["dragleave", "drop"].forEach(t => $("zona").addEventListener(t, () => $("zona").classList.remove("encima")));
+    $("zona").addEventListener("drop", e => { e.preventDefault(); agregarFotos(e.dataTransfer.files); });
+
+    // ---------- Formulario ----------
+
+    const form = $("form-pieza");
+    const destino = () => form.querySelector("input[name=destino]:checked").value;
+    // El tipo elegido es el nombre de la colección de PocketBase donde se guarda
+    const tipo = () => form.querySelector("input[name=tipo]:checked").value;
+
+    function mostrarGrupo() {
+      form.querySelectorAll("fieldset.grupo").forEach(g => g.hidden = g.disabled = g.dataset.tipo !== tipo());
+    }
+
+    form.addEventListener("change", () => {
+      sinGuardar = true;
+      $("bloque-venta").hidden = destino() !== "Venta";
+      mostrarGrupo();
+    });
+    form.addEventListener("input", e => { sinGuardar = true; limpiarError(e.target.closest("[data-campo]")?.dataset.campo); });
+    window.addEventListener("beforeunload", e => { if (sinGuardar && !$("vista-carga").hidden) e.preventDefault(); });
+
+    // Algunos campos (fecha, inscripciones) existen en más de un grupo: se usa el del tipo elegido
+    const campoDe = campo => [...form.querySelectorAll(`[data-campo="${campo}"]`)].find(c => !c.closest("fieldset:disabled"));
+
+    function marcarError(campo, texto) {
+      const c = campoDe(campo);
+      if (!c) return false;
+      limpiarError(campo);
+      c.classList.add("con-error");
+      c.insertAdjacentHTML("beforeend", `<p class="error">${esc(texto)}</p>`);
+      if (c.closest("details")) c.closest("details").open = true;
+      return true;
+    }
+
+    function limpiarError(campo) {
+      if (!campo) return;
+      form.querySelectorAll(`[data-campo="${campo}"]`).forEach(c => {
+        c.classList.remove("con-error");
+        c.querySelectorAll(".error").forEach(x => x.remove());
+      });
+    }
+
+    function limpiarErrores() {
+      form.querySelectorAll("[data-campo]").forEach(c => limpiarError(c.dataset.campo));
+      $("error-general").hidden = true;
+    }
+
+    // Acepta "1.500,50", "1500.50" o "1500"
+    function leerPrecio(texto) {
+      let t = texto.trim().replace(/\s|USD|\$/gi, "");
+      if (!t) return null;
+      if (t.includes(",")) t = t.replace(/\./g, "").replace(",", ".");
+      const n = Number(t);
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    // Revisión antes de enviar, para avisar sin esperar al servidor
+    function revisar() {
+      const errores = {};
+      if (!fotos.length) errores.imagenes = "Agregá al menos una foto.";
+      if (!$("titulo").value.trim()) errores.titulo = "Escribí un título.";
+      if (!$("inventario").value.trim()) errores.inventario = "Escribí el número de inventario.";
+      if (!$("medidas").value.trim()) errores.medidas = "Escribí las medidas.";
+      if (destino() === "Venta") {
+        const p = leerPrecio($("precio").value);
+        if (!(p > 0)) errores.precio_usd = "Para la venta hace falta un precio mayor a 0.";
+      }
+      return errores;
+    }
+
+    const MENSAJES = {
+      validation_not_unique: "Ya hay otra pieza con este dato. Tiene que ser distinto.",
+      validation_required: "Este dato es obligatorio.",
+      validation_invalid_mime_type: "Solo se aceptan fotos JPG, PNG o WEBP.",
+      validation_file_size_limit: "Alguna foto es demasiado pesada (máximo 50 MB).",
+    };
+
+    function mostrarErrores(errores) {
+      let primero = null;
+      for (const [campo, texto] of Object.entries(errores)) {
+        if (marcarError(campo, texto) && !primero) primero = campoDe(campo);
+      }
+      (primero || $("error-general")).scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      limpiarErrores();
+      const errores = revisar();
+      if (Object.keys(errores).length) return mostrarErrores(errores);
+
+      const datos = new FormData();
+      form.querySelectorAll("input[type=text][name]:enabled, textarea[name]:enabled, select[name]:enabled").forEach(el => datos.append(el.name, el.value.trim()));
+      datos.append("destino", destino());
+      if (destino() === "Venta") {
+        datos.append("precio_usd", leerPrecio($("precio").value));
+        datos.append("estado", form.querySelector("input[name=estado]:checked").value);
+      }
+      datos.append("visible", $("visible").checked);
+      if (edicion) {
+        // PocketBase: "imagenes-" borra fotos guardadas, "imagenes+" agrega nuevas al final
+        quitadas.forEach(nombre => datos.append("imagenes-", nombre));
+        fotos.filter(f => f.archivo).forEach(f => datos.append("imagenes+", f.archivo));
+      } else {
+        fotos.forEach(f => datos.append("imagenes", f.archivo));
+      }
+
+      const boton = $("guardar");
+      const textoBoton = boton.textContent;
+      boton.disabled = true;
+      boton.textContent = "Guardando…";
+      try {
+        const url = edicion
+          ? `${PB_URL}/api/collections/${encodeURIComponent(edicion.coleccion)}/records/${encodeURIComponent(edicion.id)}`
+          : `${PB_URL}/api/collections/${tipo()}/records`;
+        const r = await fetch(url, {
+          method: edicion ? "PATCH" : "POST", headers: { Authorization: sesion.token }, body: datos,
+        });
+        const d = await r.json().catch(() => ({}));
+
+        if (r.status === 401 || r.status === 403) {
+          $("error-general").textContent = "Tu sesión venció o no tenés permiso para cargar piezas. Cerrá sesión y volvé a ingresar (los datos de esta pieza no se pierden si no recargás la página).";
+          $("error-general").hidden = false;
+          return $("error-general").scrollIntoView({ behavior: "smooth" });
+        }
+        if (!r.ok) {
+          const porCampo = {};
+          for (const [campo, err] of Object.entries(d.data || {})) porCampo[campo] = MENSAJES[err.code] || err.message;
+          if (Object.keys(porCampo).length) return mostrarErrores(porCampo);
+          // Mensajes de las reglas del servidor (por ejemplo, el precio para la venta)
+          $("error-general").textContent = d.message || "No se pudo guardar. Probá de nuevo.";
+          $("error-general").hidden = false;
+          return $("error-general").scrollIntoView({ behavior: "smooth" });
+        }
+
+        sinGuardar = false;
+        mostrarListo(d);
+      } catch (err) {
+        console.error(err);
+        $("error-general").textContent = "No se pudo conectar con el servidor. Revisá la conexión y probá de nuevo.";
+        $("error-general").hidden = false;
+      } finally {
+        boton.disabled = false;
+        boton.textContent = textoBoton;
+      }
+    });
+
+    $("eliminar").addEventListener("click", async () => {
+      if (!confirm(`¿Eliminar «${edicion.titulo}»?\n\nSe borra la pieza con todas sus fotos y no se puede deshacer.`)) return;
+      const boton = $("eliminar");
+      boton.disabled = true;
+      $("error-general").hidden = true;
+      try {
+        const r = await fetch(`${PB_URL}/api/collections/${encodeURIComponent(edicion.coleccion)}/records/${encodeURIComponent(edicion.id)}`, {
+          method: "DELETE", headers: { Authorization: sesion.token },
+        });
+        if (!r.ok) {
+          $("error-general").textContent = r.status === 401 || r.status === 403
+            ? "Tu sesión venció o no tenés permiso para eliminar piezas. Cerrá sesión y volvé a ingresar."
+            : "No se pudo eliminar la pieza. Probá de nuevo.";
+          $("error-general").hidden = false;
+          return $("error-general").scrollIntoView({ behavior: "smooth" });
+        }
+        const titulo = edicion.titulo;
+        salirDeEdicion();
+        limpiarFormulario();
+        $("listo-titulo").textContent = "Pieza eliminada";
+        $("listo-texto").textContent = `«${titulo}» se eliminó de la base de datos.`;
+        $("listo-img").hidden = $("ver").hidden = true;
+        mostrar("vista-listo");
+      } catch (err) {
+        console.error(err);
+        $("error-general").textContent = "No se pudo conectar con el servidor. Revisá la conexión y probá de nuevo.";
+        $("error-general").hidden = false;
+      } finally {
+        boton.disabled = false;
+      }
+    });
+
+    function mostrarListo(p) {
+      const archivo = archivosDe(p)[0];
+      $("listo-img").src = archivo ? urlImagen(p, archivo, "400x0") : "";
+      $("listo-img").hidden = !archivo;
+      $("listo-titulo").textContent = edicion ? "¡Cambios guardados!" : "¡Pieza guardada!";
+      const enTienda = p.visible && p.destino === "Venta";
+      $("listo-texto").textContent = enTienda
+        ? `«${p.titulo}» ya aparece en la tienda.`
+        : p.visible
+          ? `«${p.titulo}» quedó guardada. No aparece en la tienda porque su destino no es «Venta».`
+          : `«${p.titulo}» quedó guardada, oculta de la web.`;
+      $("ver").hidden = !enTienda;
+      $("ver").href = `pieza.html?c=${encodeURIComponent(p.collectionName)}&id=${encodeURIComponent(p.id)}`;
+      salirDeEdicion();
+      limpiarFormulario();
+      mostrar("vista-listo");
+    }
+
+    function limpiarFormulario() {
+      form.reset();
+      fotos.forEach(f => { if (f.archivo) URL.revokeObjectURL(f.vista); });
+      fotos = [];
+      quitadas = [];
+      pintarFotos();
+      limpiarErrores();
+      $("bloque-venta").hidden = true;
+      mostrarGrupo();
+      form.querySelector("details.mas").open = false;
+      sinGuardar = false;
+    }
+
+    $("otra").addEventListener("click", abrirFormulario);
+
+    // ---------- Inicio ----------
+
+    (async function iniciar() {
+      sesion = await sesionVigente();
+      if (sesion) return abrirFormulario();
+      mostrar("vista-ingreso");
+    })();
+  </script>
+</body>
+</html>

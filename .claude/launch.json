@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "pocketbase",
+      "runtimeExecutable": "tienda/pocketbase/pocketbase.exe",
+      "runtimeArgs": ["serve", "--dir", "tienda/pocketbase/pb_data", "--hooksDir", "tienda/pocketbase/pb_hooks", "--migrationsDir", "tienda/pocketbase/pb_migrations"],
+      "port": 8090
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5500", "--directory", "tienda"],
+      "port": 5500
+    }
+  ]
+}

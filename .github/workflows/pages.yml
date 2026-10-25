@@ -1,0 +1,37 @@
+# Publica la web (carpeta tienda/, sin PocketBase) en GitHub Pages con cada push a main.
+# En Pages la web corre en modo exhibición: lee tienda/datos/ (ver exportar_demo.py).
+name: Publicar en GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Armar el sitio (tienda/ sin la carpeta de PocketBase)
+        run: |
+          mkdir _site
+          cp -r tienda/. _site/
+          rm -rf _site/pocketbase
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4

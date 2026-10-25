@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pródigo – Tienda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="papel" data-seccion="tienda">
+
+  <header class="cabecera" id="cabecera"></header>
+  <script src="cabecera.js"></script>
+
+  <main class="catalogo">
+    <div class="portada">
+      <h1>Tienda</h1>
+      <p>Piezas de la colección disponibles para la venta.</p>
+    </div>
+
+    <nav class="categorias" aria-label="Categorías">
+      <ul id="lista-categorias"></ul>
+    </nav>
+
+    <div class="filtros" id="filtros" hidden></div>
+
+    <section aria-live="polite">
+      <div class="encabezado-lista">
+        <h2 id="titulo-lista">Todas las piezas</h2>
+        <p id="cantidad"></p>
+      </div>
+      <div class="grilla" id="grilla"><p>Cargando…</p></div>
+    </section>
+  </main>
+
+  <script src="api.js"></script>
+  <script>
+    const TODAS = "todas";
+    let categorias = [];
+    let piezas = [];
+    let activa = TODAS;
+    let filtros = {};   // campo -> valor elegido, dentro de la categoría activa
+
+    // Especificaciones por las que se puede filtrar en cada categoría (slug: [campo, etiqueta]).
+    // Las opciones salen de los valores que tienen las piezas cargadas.
+    const FILTROS = {
+      fotografias: [["fotografo", "Fotógrafo"], ["coleccion", "Colección"], ["soporte", "Soporte"], ["proceso", "Proceso"]],
+      postales: [["color", "Color"], ["lugar", "Lugar"], ["editorial", "Editorial"], ["circulada", "Circulación"]],
+      maquinas_de_escribir: [["marca", "Marca"], ["origen", "País de origen"], ["funcionamiento", "Funcionamiento"], ["teclado", "Teclado"]],
+    };
+
+    const grilla = document.getElementById("grilla");
+    const lista = document.getElementById("lista-categorias");
+    const cajaFiltros = document.getElementById("filtros");
+
+    const deCategoria = () => activa === TODAS ? piezas : piezas.filter(p => p._cat.slug === activa);
+
+    function pintarFiltros() {
+      const enCat = deCategoria();
+      const html = (FILTROS[activa] || []).map(([campo, etiqueta]) => {
+        const valores = [...new Set(enCat.map(p => p[campo]).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
+        if (!valores.length) return "";
+        return `<label>${etiqueta}
+          <select data-filtro="${campo}">
+            <option value="">Todos</option>
+            ${valores.map(v => `<option${v === filtros[campo] ? " selected" : ""}>${esc(v)}</option>`).join("")}
+          </select></label>`;
+      }).join("");
+      cajaFiltros.innerHTML = html + (Object.keys(filtros).length ? `<button type="button" class="limpiar">Quitar filtros</button>` : "");
+      cajaFiltros.hidden = !html;
+    }
+
+    function pintarCategorias() {
+      const items = [{ slug: TODAS, nombre: "Todas" }, ...categorias];
+      lista.innerHTML = items.map(c => {
+        const total = c.slug === TODAS ? piezas.length : piezas.filter(p => p._cat.slug === c.slug).length;
+        return `<li><button type="button" data-cat="${esc(c.slug)}" aria-pressed="${c.slug === activa}"><span>${esc(c.nombre)}</span><span>${total}</span></button></li>`;
+      }).join("");
+    }
+
+    function pintarPiezas() {
+      const visibles = deCategoria().filter(p => Object.entries(filtros).every(([campo, valor]) => p[campo] === valor));
+      const cat = categorias.find(c => c.slug === activa);
+      document.getElementById("titulo-lista").textContent = cat ? cat.nombre : "Todas las piezas";
+      document.getElementById("cantidad").textContent = visibles.length + (visibles.length === 1 ? " pieza" : " piezas");
+
+      if (!visibles.length) {
+        grilla.innerHTML = Object.keys(filtros).length
+          ? `<p>Ninguna pieza coincide con los filtros elegidos.</p>`
+          : `<p>Todavía no hay piezas en venta en esta categoría.</p>`;
+        return;
+      }
+      grilla.innerHTML = visibles.map(p => {
+        const img = archivosDe(p)[0];
+        return `
+        <article class="pieza">
+          <a href="pieza.html?c=${encodeURIComponent(p.collectionName)}&id=${encodeURIComponent(p.id)}">
+            <div class="placa">${img ? `<img src="${esc(urlImagen(p, img, "400x0"))}" alt="${esc(p.titulo)}" loading="lazy">` : esc(String(p.titulo || "?").charAt(0))}</div>
+            <h3>${esc(p.titulo)}</h3>
+            <p class="detalle">${esc(p._cat.nombre)}${p.coleccion ? ". " + esc(p.coleccion) : ""}</p>
+            <p class="precio">${esc(formatoPrecio(p))}</p>
+            ${p.estado ? `<span class="estado ${p.estado === "Reservada" ? "reservada" : ""}">${esc(p.estado)}</span>` : ""}
+          </a>
+        </article>`;
+      }).join("");
+    }
+
+    lista.addEventListener("click", e => {
+      const b = e.target.closest("button[data-cat]");
+      if (!b) return;
+      activa = b.dataset.cat;
+      filtros = {};
+      pintarCategorias();
+      pintarFiltros();
+      pintarPiezas();
+    });
+
+    cajaFiltros.addEventListener("change", e => {
+      const campo = e.target.dataset.filtro;
+      if (!campo) return;
+      if (e.target.value) filtros[campo] = e.target.value; else delete filtros[campo];
+      pintarFiltros();
+      pintarPiezas();
+    });
+
+    cajaFiltros.addEventListener("click", e => {
+      if (!e.target.closest(".limpiar")) return;
+      filtros = {};
+      pintarFiltros();
+      pintarPiezas();
+    });
+
+    async function iniciar() {
+      try {
+        categorias = await listarCategorias();
+        const grupos = await Promise.all(categorias.map(async c => {
+          const items = await listarPiezas(c.coleccion || c.slug);
+          return items.map(p => ({ ...p, _cat: c }));
+        }));
+        piezas = grupos.flat();
+        pintarCategorias();
+        pintarPiezas();
+      } catch (err) {
+        console.error(err);
+        grilla.innerHTML = `<div class="vacio"><h1>No se pudo cargar el catálogo</h1><p>Revisá que PocketBase esté corriendo y que la dirección en api.js sea la correcta.</p></div>`;
+      }
+    }
+    iniciar();
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Base de datos de PocketBase: piezas, fotos subidas y cuentas (contraseñas cifradas). Nunca se publica.
+tienda/pocketbase/pb_data/
+backups/
+
+# Ejecutable de PocketBase (33 MB): se descarga de pocketbase.io
+tienda/pocketbase/pocketbase.exe
+
+# graphify: caché y archivos con rutas de esta computadora (el grafo y el informe sí se suben)
+graphify-out/cache/
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/.graphify_labels.pending.json

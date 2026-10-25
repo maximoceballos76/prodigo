@@ -1,0 +1,142 @@
+PRÓDIGO – HOJA DE RUTA
+Creada: 2026-10-24
+Última actualización: 2026-10-25
+
+Lista de lo que le falta a la página, ordenada por prioridad.
+Marcar con [x] lo terminado. Agregar ideas nuevas al final de la etapa que
+corresponda (o en "Ideas sueltas" si todavía no tienen lugar).
+
+Leyenda:  [ ] pendiente   [~] en curso   [x] hecho
+
+
+==============================================================================
+ETAPA 1 – ARREGLAR LO QUE HOY ESTÁ A MEDIAS
+(cosas que ya existen pero tienen datos de ejemplo o un hueco)
+==============================================================================
+
+[ ] Correo real de consultas. El botón "Consultar por esta pieza" manda a
+    contacto@ejemplo.com (pieza.html).
+[ ] Antes de publicar: reemplazar las piezas de ejemplo (FOT-0003 a 0008,
+    POS-0005 a 0010, MAQ-0003 a 0008) por piezas reales, o borrarlas. Sus
+    autores, colecciones y precios son inventados (ver DOCUMENTACION.txt, 5).
+[ ] Revisar fechas, medidas, marca y modelo de máquinas y postales
+    (se estimaron mirando las fotos).
+[ ] Piezas "Vendida": hoy siguen apareciendo en la tienda como cualquier
+    otra. Decidir: ocultarlas, o mostrarlas con el cartel "Vendida" y sin
+    botón de consulta.
+[ ] Borrar tienda/piezas.js (datos de ejemplo viejos que ya no usa nadie).
+[ ] Crear las cuentas de editores reales desde el panel de PocketBase.
+
+
+==============================================================================
+ETAPA 2 – CARGA Y EDICIÓN DE PIEZAS (cargar.html)
+==============================================================================
+
+[x] Modificar y eliminar una pieza ya cargada (cargar.html?c=...&id=...).
+[x] Panel de administración (admin.html): cargar, modificar y eliminar,
+    con listado de todas las piezas, buscador y filtro por categoría.
+[ ] Enlace al panel desde el sitio (pendiente a propósito: por ahora se
+    entra solo con la dirección admin.html).
+[ ] Marcar una pieza como Vendida / Reservada con un solo clic.
+[ ] Reordenar las fotos de una pieza (elegir cuál es la principal).
+[ ] Achicar las fotos antes de subirlas (hoy se sube el archivo original,
+    hasta 50 MB).
+[ ] Avisar si el N.º de inventario ya existe en OTRA categoría (hoy solo
+    se controla dentro de la misma).
+
+
+==============================================================================
+ETAPA 3 – TIENDA (tienda.html y pieza.html)
+==============================================================================
+
+[ ] Buscador por título / descripción.
+[ ] Ordenar por: más nuevas, precio menor a mayor, precio mayor a menor.
+[ ] Filtro por estado (solo disponibles).
+[ ] Recordar la categoría elegida en la dirección (tienda.html?cat=postales),
+    para poder compartir el link y que "Volver al catálogo" vuelva a la
+    misma categoría.
+[ ] Paginación o "cargar más" (hoy trae hasta 200 piezas por categoría).
+[ ] Ficha: piezas relacionadas (otras de la misma categoría) al pie.
+[ ] Ficha: ver la foto en grande / zoom (el campo para zoom profundo con
+    .dzi ya estuvo pensado: ruta_tiles / archivo_master).
+[ ] Ficha: botón de WhatsApp además del correo.
+[ ] Ficha: botón "Compartir" (copiar link).
+[ ] Elegir la paleta de colores definitiva y sacar el selector del
+    encabezado (era para la etapa de prototipo).
+
+
+==============================================================================
+ETAPA 4 – SECCIONES NUEVAS (más allá de la tienda)
+Se agregan en tienda/cabecera.js → SECCIONES (ver DOCUMENTACION.txt).
+==============================================================================
+
+[x] Portada (index.html): foto, nombre, datos y botón a la tienda.
+[ ] Portada: reemplazar los datos de ejemplo (frase, sedes, horario,
+    entrada, cantidad de piezas, correo) y, si se quiere, la foto.
+[ ] Portada: sumar debajo piezas destacadas y accesos a las secciones.
+[ ] Colección: piezas que NO están en venta (destino Museo Miranda /
+    Museo Ezeiza), para mostrar el acervo sin precio.
+[ ] Museos: una página por museo (Miranda, Ezeiza) con dirección,
+    horarios, cómo llegar, fotos.
+[ ] Nosotros / Historia del proyecto.
+[ ] Contacto: formulario, correo, redes, mapa.
+[ ] Pie de página común (footer) con contacto, redes y créditos, armado
+    igual que el encabezado (un solo archivo para todas las páginas).
+
+
+==============================================================================
+ETAPA 5 – PUBLICAR LA PÁGINA (producción)
+==============================================================================
+
+[x] Versión de exhibición (solo lectura) en GitHub Pages:
+    https://maximoceballos76.github.io/prodigo/ (ver DOCUMENTACION.txt, 6).
+[ ] Elegir hosting para la web (archivos de tienda/) y para PocketBase
+    (necesita un servidor que quede prendido: VPS, Fly.io, PocketHost, etc.).
+[ ] Dominio propio y HTTPS.
+[ ] Cambiar PB_URL en tienda/api.js por la dirección pública de PocketBase.
+[ ] Configurar en PocketBase el acceso solo desde el dominio de la web.
+[ ] Copias de seguridad automáticas de pb_data (hoy son manuales, en
+    backups/).
+[ ] Contraseñas fuertes para administradores y editores.
+[ ] Título, descripción e imagen para cuando se comparte un link
+    (WhatsApp, redes) y para buscadores. Ojo: la ficha arma el contenido
+    con JavaScript, y algunas redes no lo leen; puede hacer falta una
+    solución aparte.
+[ ] Ícono del sitio (favicon).
+[ ] Página de error 404 con el estilo del sitio.
+[ ] Estadísticas de visitas (simples, sin cookies invasivas).
+
+
+==============================================================================
+ETAPA 6 – MÁS ADELANTE (si el proyecto lo necesita)
+==============================================================================
+
+[ ] Venta online con pago (Mercado Pago / tarjeta) y carrito.
+    Hoy la venta es por consulta, que para piezas únicas suele alcanzar.
+[ ] Versión en inglés.
+[ ] Exportar el inventario a planilla (Excel / CSV).
+[ ] Aviso por correo al administrador cuando llega una consulta o se
+    carga una pieza.
+
+
+==============================================================================
+IDEAS SUELTAS (agregar acá lo que vaya surgiendo)
+==============================================================================
+
+-
+
+
+==============================================================================
+HECHO
+==============================================================================
+
+[x] Catálogo conectado a PocketBase, con categorías.
+[x] Ficha de pieza con varias fotos y datos de catalogación.
+[x] Carga de piezas para editores (cargar.html) con login.
+[x] Categorías Postales y Máquinas de escribir, con sus campos propios.
+[x] Encabezado común con menú de secciones y categorías como pestañas.
+[x] Filtros por especificación dentro de cada categoría (fotógrafo, marca,
+    color de postales, etc.).
+[x] 18 piezas de ejemplo para el prototipo y estandarización de las 8
+    existentes (numeración FOT/POS/MAQ, datos completos, precios realistas).
+[x] Documentación del proyecto (DOCUMENTACION.txt).

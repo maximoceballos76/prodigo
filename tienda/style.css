@@ -1,0 +1,401 @@
+/* Pródigo – prototipo de tienda. Las paletas se cambian con data-theme en <body>. */
+
+:root,
+[data-theme="papel"] {
+  --fondo: #f3eee3;      /* beige papel */
+  --superficie: #fbf8f1; /* blanco roto */
+  --placa: #e4dccb;      /* fondo de las piezas sin foto */
+  --tinta: #26231e;
+  --tinta-suave: #6b6458;
+  --linea: #d8cfbb;
+  --acento: #2f4a3b;     /* verde de archivo */
+  --acento-texto: #fbf8f1;
+}
+
+[data-theme="arena"] {
+  --fondo: #efe4d2;
+  --superficie: #f8f0e2;
+  --placa: #dfcfb4;
+  --tinta: #2b211d;
+  --tinta-suave: #76645a;
+  --linea: #d4c1a4;
+  --acento: #6e2a35;     /* borravino */
+  --acento-texto: #f8f0e2;
+}
+
+[data-theme="niebla"] {
+  --fondo: #eceae4;
+  --superficie: #f7f6f2;
+  --placa: #d9d9d2;
+  --tinta: #1f2630;
+  --tinta-suave: #5c6572;
+  --linea: #cfd0c9;
+  --acento: #27425e;     /* azul tinta */
+  --acento-texto: #f7f6f2;
+}
+
+* { box-sizing: border-box; margin: 0; }
+
+body {
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: "Instrument Sans", system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+:focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; }
+
+/* Encabezado común (lo arma cabecera.js): marca, secciones y paleta */
+.cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 4vw, 3rem);
+  padding: 0.9rem clamp(1rem, 4vw, 3rem);
+  background: color-mix(in srgb, var(--fondo) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--linea);
+}
+.marca {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: inherit;
+  text-decoration: none;
+}
+.secciones { flex: 1; min-width: 0; }
+.secciones ul { list-style: none; padding: 0; display: flex; gap: 1.75rem; overflow-x: auto; }
+.secciones a {
+  display: block;
+  padding: 0.35rem 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+.secciones a:hover { color: var(--tinta); }
+.secciones a[aria-current] { color: var(--tinta); border-bottom-color: var(--acento); }
+
+/* Portada (index.html): foto a pantalla completa, el encabezado va encima, transparente */
+[data-seccion="inicio"] .cabecera {
+  position: absolute;
+  inset: 0 0 auto;
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom-color: rgb(255 255 255 / 0.18);
+}
+[data-seccion="inicio"] .marca,
+[data-seccion="inicio"] .secciones a { color: #fbf8f1; }
+[data-seccion="inicio"] .secciones a[aria-current] { border-bottom-color: #fbf8f1; }
+[data-seccion="inicio"] .paletas button { border-color: transparent; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.5); }
+[data-seccion="inicio"] .paletas button[aria-pressed="true"] { box-shadow: 0 0 0 2px #fbf8f1; }
+
+.portada-inicio {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  align-items: end;
+  padding: 7rem clamp(1rem, 5vw, 4rem) clamp(2rem, 5vh, 3.5rem);
+  color: #fbf8f1;
+  background: #1d1a16 url("imgs/portada.webp") center 40% / cover no-repeat;
+  overflow: hidden;
+}
+/* Oscurece la foto abajo (donde va el texto) y arriba (encabezado), con un tono sepia */
+.portada-inicio::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgb(22 18 13 / 0.92) 0%, rgb(22 18 13 / 0.55) 45%, rgb(22 18 13 / 0.15) 75%, rgb(22 18 13 / 0.5) 100%),
+    rgb(60 40 15 / 0.18);
+}
+.portada-contenido { position: relative; max-width: 62rem; }
+.portada-antetitulo {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.portada-titulo {
+  font-family: "Newsreader", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(4.5rem, 15vw, 11rem);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  margin: 0.15em 0 0.2em -0.04em;
+}
+.portada-bajada {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+  line-height: 1.35;
+  max-width: 34rem;
+  opacity: 0.92;
+}
+.portada-botones { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 2rem 0 2.75rem; }
+.boton.portada-cta { background: #fbf8f1; color: #1d1a16; padding: 0.95rem 1.75rem; font-size: 1.05rem; }
+.portada-cta span { display: inline-block; transition: transform 0.2s; }
+.portada-cta:hover span { transform: translateX(4px); }
+.boton.portada-secundario { background: transparent; color: #fbf8f1; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.6); padding: 0.95rem 1.5rem; font-size: 1.05rem; }
+.portada-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgb(255 255 255 / 0.25);
+}
+.portada-datos dt { font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.7; }
+.portada-datos dd { margin: 0.2rem 0 0; }
+.portada-epigrafe {
+  position: absolute;
+  right: clamp(1rem, 5vw, 4rem);
+  bottom: 0.9rem;
+  font-size: 0.75rem;
+  font-style: italic;
+  opacity: 0.6;
+}
+
+/* Entrada suave del texto (se omite si el sistema pide menos animación) */
+@media (prefers-reduced-motion: no-preference) {
+  .portada-contenido > * { animation: aparecer 0.9s cubic-bezier(.2, .7, .2, 1) both; }
+  .portada-contenido > :nth-child(2) { animation-delay: 0.1s; }
+  .portada-contenido > :nth-child(3) { animation-delay: 0.25s; }
+  .portada-contenido > :nth-child(4) { animation-delay: 0.4s; }
+  .portada-contenido > :nth-child(5) { animation-delay: 0.55s; }
+}
+@keyframes aparecer { from { opacity: 0; transform: translateY(14px); } }
+
+@media (max-width: 600px) {
+  .portada-epigrafe { position: relative; right: auto; bottom: auto; margin-top: 1.5rem; }
+  .portada-botones .boton { flex: 1; text-align: center; white-space: nowrap; padding-inline: 1rem; }
+  .portada-datos { grid-template-columns: 1fr 1fr; }
+}
+
+/* Selector de paleta: una muestra de color por paleta */
+.paletas { display: flex; gap: 0.4rem; }
+.paletas button {
+  width: 1.1rem;
+  height: 1.1rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--fondo);
+  background: var(--muestra);
+  box-shadow: 0 0 0 1px var(--linea);
+  cursor: pointer;
+}
+.paletas button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--tinta); }
+
+/* Tienda: título, pestañas de categorías y grilla */
+.catalogo { padding: 2.5rem clamp(1rem, 4vw, 3rem) 4rem; }
+.portada { margin-bottom: 1.75rem; }
+.portada h1 {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.portada p { color: var(--tinta-suave); margin-top: 0.35rem; }
+
+.categorias { border-bottom: 1px solid var(--linea); margin-bottom: 2rem; }
+.categorias ul { list-style: none; padding: 0; display: flex; gap: 0.5rem; overflow-x: auto; overflow-y: hidden; }
+.categorias button {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 2px solid transparent;
+  color: var(--tinta-suave);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.categorias button span:last-child {
+  font-size: 0.75rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--placa);
+}
+.categorias button:hover { color: var(--tinta); }
+.categorias button:focus-visible { outline: 2px solid var(--acento); outline-offset: -2px; }
+.categorias button[aria-pressed="true"] { color: var(--tinta); font-weight: 600; border-bottom-color: var(--acento); }
+.categorias button[aria-pressed="true"] span:last-child { background: var(--acento); color: var(--acento-texto); }
+
+/* Filtros por especificación (solo dentro de una categoría) */
+.filtros { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem 1rem; margin: -0.75rem 0 2rem; }
+.filtros label { display: grid; gap: 0.25rem; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tinta-suave); }
+.filtros select {
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+  min-width: 11rem;
+}
+.filtros .limpiar {
+  font: inherit;
+  font-size: 0.9rem;
+  background: none;
+  border: 0;
+  padding: 0.5rem 0;
+  color: var(--acento);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* Piezas */
+.encabezado-lista {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1.5rem;
+}
+.encabezado-lista h2 {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 500;
+}
+.encabezado-lista p { color: var(--tinta-suave); font-size: 0.9rem; }
+
+.grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 2rem 1.5rem;
+}
+
+.pieza a { color: inherit; text-decoration: none; display: block; }
+
+.placa {
+  aspect-ratio: 4 / 5;
+  background: var(--placa);
+  border: 1px solid var(--linea);
+  display: grid;
+  place-items: center;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 2.5rem;
+  color: var(--tinta-suave);
+  overflow: hidden;
+}
+.placa img { width: 100%; height: 100%; object-fit: cover; }
+
+.pieza h3 {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-top: 0.75rem;
+}
+.pieza a:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
+.pieza .detalle { color: var(--tinta-suave); font-size: 0.85rem; }
+.pieza .precio { margin-top: 0.25rem; font-weight: 600; }
+.pieza .estado {
+  display: inline-block;
+  margin-top: 0.4rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  background: var(--acento);
+  color: var(--acento-texto);
+}
+.pieza .estado.reservada { background: transparent; color: var(--tinta-suave); border: 1px solid var(--linea); }
+
+/* Móvil: las secciones bajan a su propia fila, debajo de la marca */
+@media (max-width: 600px) {
+  .cabecera { flex-wrap: wrap; row-gap: 0.5rem; }
+  .paletas { margin-left: auto; }
+  .secciones { order: 3; flex-basis: 100%; }
+}
+
+/* Ficha de pieza */
+.ficha { padding: 1.5rem clamp(1rem, 4vw, 3rem) 4rem; }
+.volver { color: var(--tinta-suave); font-size: 0.9rem; }
+.volver:hover { color: var(--tinta); }
+
+.ficha-cuerpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  margin-top: 1.25rem;
+}
+
+.visor { aspect-ratio: 4 / 5; width: 100%; max-height: 80vh; }
+.visor img { object-fit: contain; }
+
+.miniaturas { display: flex; gap: 0.75rem; margin-top: 0.75rem; }
+.miniatura {
+  all: unset;
+  box-sizing: border-box;
+  width: 84px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--tinta-suave);
+}
+.miniatura .placa { display: grid; font-size: 1.25rem; }
+.credito { font-size: 0.75rem; color: var(--tinta-suave); margin-top: 0.5rem; }
+.miniatura[aria-pressed="true"] .placa { outline: 2px solid var(--acento); outline-offset: 2px; }
+.miniatura:focus-visible .placa { outline: 2px solid var(--acento); outline-offset: 2px; }
+
+.ficha-datos h1 {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 500;
+  line-height: 1.15;
+  margin: 0.25rem 0 0.75rem;
+}
+.precio-grande { font-size: 1.4rem; font-weight: 600; }
+.ficha-datos .estado {
+  display: inline-block;
+  margin-top: 0.4rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  background: var(--acento);
+  color: var(--acento-texto);
+}
+.ficha-datos .estado.reservada { background: transparent; color: var(--tinta-suave); border: 1px solid var(--linea); }
+.ficha-datos .detalle { color: var(--tinta-suave); font-size: 0.9rem; }
+
+.ficha-datos dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.6rem 1.5rem;
+  margin: 1.75rem 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--linea);
+}
+.ficha-datos dt { color: var(--tinta-suave); }
+.ficha-datos dd { margin: 0; }
+
+.boton {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: var(--acento);
+  color: var(--acento-texto);
+  text-decoration: none;
+  border-radius: 2px;
+  font-weight: 600;
+}
+.boton:hover { filter: brightness(1.12); }
+
+.vacio { max-width: 32rem; padding: 3rem 0; }
+.vacio h1 { font-family: "Newsreader", Georgia, serif; font-weight: 500; margin-bottom: 0.5rem; }
+.vacio .boton { margin-top: 1.25rem; }
+
+@media (max-width: 760px) {
+  .ficha-cuerpo { grid-template-columns: 1fr; }
+}
