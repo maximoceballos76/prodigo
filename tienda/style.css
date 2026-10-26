@@ -45,6 +45,9 @@ body {
 
 :focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; }
 
+/* Cartel de la demo en GitHub Pages (panel y carga, ver sesion.js) */
+.aviso-demo { background: var(--acento); color: var(--acento-texto); text-align: center; font-size: 0.9rem; padding: 0.5rem 1rem; }
+
 /* Encabezado común (lo arma cabecera.js): marca, secciones y paleta */
 .cabecera {
   position: sticky;

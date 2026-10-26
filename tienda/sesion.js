@@ -6,7 +6,15 @@ function recordarSesion(s) {
   try { s ? localStorage.setItem(CLAVE_SESION, JSON.stringify(s)) : localStorage.removeItem(CLAVE_SESION); } catch (_) {}
 }
 
+// Demo en GitHub Pages: no hay PocketBase, así que se entra sin contraseña y nada se guarda
+const SESION_DEMO = { token: "", nombre: "Demostración", coleccion: "demo" };
+if (MODO_DEMO) {
+  document.body.insertAdjacentHTML("afterbegin",
+    `<p class="aviso-demo">Versión de demostración: podés recorrer el panel y el formulario, pero los cambios no se guardan.</p>`);
+}
+
 async function ingresar(correo, clave) {
+  if (MODO_DEMO) return SESION_DEMO;
   // Primero como editor; si no, como administrador del panel
   for (const coleccion of ["editores", "_superusers"]) {
     const r = await fetch(`${PB_URL}/api/collections/${coleccion}/auth-with-password`, {
@@ -34,6 +42,7 @@ async function renovar(s) {
 
 // La sesión guardada, renovada; o null si no hay o venció
 async function sesionVigente() {
+  if (MODO_DEMO) return SESION_DEMO;
   let guardada = null;
   try { guardada = JSON.parse(localStorage.getItem(CLAVE_SESION)); } catch (_) {}
   if (!guardada) return null;

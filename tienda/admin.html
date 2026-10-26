@@ -239,6 +239,7 @@
       try {
         categorias = await listarCategorias();
         const grupos = await Promise.all(categorias.map(async c => {
+          if (MODO_DEMO) return (await demo(c.coleccion || c.slug)).map(p => ({ ...p, _cat: c }));
           // shortcut: hasta 500 piezas por categoría en una sola consulta; paginar si alguna crece más
           const r = await fetch(`${PB_URL}/api/collections/${c.coleccion || c.slug}/records?sort=inventario&perPage=500`,
             { headers: { Authorization: sesion.token } });
@@ -384,6 +385,11 @@
       if (!b) return;
       const p = piezas.find(x => x.id === b.dataset.eliminar);
       if (!confirm(`¿Eliminar «${p.titulo}» (${p.inventario})?\n\nSe borra la pieza con todas sus fotos y no se puede deshacer.`)) return;
+      if (MODO_DEMO) {
+        piezas = piezas.filter(x => x !== p);
+        avisar(`«${p.titulo}» se eliminó (demostración: al recargar la página vuelve a aparecer).`, true);
+        return pintarTodo();
+      }
       b.disabled = true;
       try {
         const r = await fetch(`${PB_URL}/api/collections/${encodeURIComponent(p.collectionName)}/records/${encodeURIComponent(p.id)}`, {

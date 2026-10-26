@@ -359,10 +359,14 @@
       limpiarFormulario();
       let p;
       try {
-        const r = await fetch(`${PB_URL}/api/collections/${encodeURIComponent(edicion.coleccion)}/records/${encodeURIComponent(edicion.id)}`,
-          { headers: { Authorization: sesion.token } });
-        if (!r.ok) throw new Error("PocketBase respondió " + r.status);
-        p = await r.json();
+        if (MODO_DEMO) {
+          p = await obtenerPieza(edicion.coleccion, edicion.id);
+        } else {
+          const r = await fetch(`${PB_URL}/api/collections/${encodeURIComponent(edicion.coleccion)}/records/${encodeURIComponent(edicion.id)}`,
+            { headers: { Authorization: sesion.token } });
+          if (!r.ok) throw new Error("PocketBase respondió " + r.status);
+          p = await r.json();
+        }
       } catch (err) {
         console.error(err);
         form.hidden = true;
@@ -506,6 +510,8 @@
       limpiarErrores();
       const errores = revisar();
       if (Object.keys(errores).length) return mostrarErrores(errores);
+      if (MODO_DEMO) return mostrarDemo(edicion ? "¡Cambios guardados!" : "¡Pieza guardada!", fotos[0].vista,
+        `«${$("titulo").value.trim()}» pasó todas las revisiones. En la versión real quedaría guardada en la base de datos; en esta demostración no se guarda.`);
 
       const datos = new FormData();
       form.querySelectorAll("input[type=text][name]:enabled, textarea[name]:enabled, select[name]:enabled").forEach(el => datos.append(el.name, el.value.trim()));
@@ -565,6 +571,8 @@
 
     $("eliminar").addEventListener("click", async () => {
       if (!confirm(`¿Eliminar «${edicion.titulo}»?\n\nSe borra la pieza con todas sus fotos y no se puede deshacer.`)) return;
+      if (MODO_DEMO) return mostrarDemo("Pieza eliminada", "",
+        `En la versión real, «${edicion.titulo}» se eliminaría de la base de datos; en esta demostración no se borra.`);
       const boton = $("eliminar");
       boton.disabled = true;
       $("error-general").hidden = true;
@@ -608,6 +616,20 @@
           : `«${p.titulo}» quedó guardada, oculta de la web.`;
       $("ver").hidden = !enTienda;
       $("ver").href = `pieza.html?c=${encodeURIComponent(p.collectionName)}&id=${encodeURIComponent(p.id)}`;
+      salirDeEdicion();
+      limpiarFormulario();
+      mostrar("vista-listo");
+    }
+
+    // Demo en GitHub Pages: muestra la confirmación sin guardar nada
+    function mostrarDemo(titulo, foto, texto) {
+      $("listo-img").src = foto;
+      $("listo-img").hidden = !foto;
+      $("listo-titulo").textContent = titulo;
+      $("listo-texto").textContent = texto;
+      $("ver").hidden = true;
+      sinGuardar = false;
+      fotos = fotos.filter(f => f.vista !== foto);   // que limpiarFormulario no anule la foto que se muestra
       salirDeEdicion();
       limpiarFormulario();
       mostrar("vista-listo");

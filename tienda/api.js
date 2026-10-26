@@ -17,7 +17,14 @@ async function pb(ruta) {
 async function demo(archivo) {
   const r = await fetch(`datos/${archivo}.json`);
   if (!r.ok) throw new Error("Falta datos/" + archivo + ".json");
-  return r.json();
+  const d = await r.json();
+  // La API pública no da el N.º de inventario; para el panel de la demo se saca del nombre de la
+  // primera foto, que se llama igual (fot_0003_x.jpg -> FOT-0003). La web pública no lo muestra.
+  d.forEach(p => {
+    const m = /^([a-z]{3})_(\d{4})/.exec(archivosDe(p)[0] || "");
+    if (m && !p.inventario) p.inventario = m[1].toUpperCase() + "-" + m[2];
+  });
+  return d;
 }
 
 // Categorías visibles del menú, en el orden definido en el panel

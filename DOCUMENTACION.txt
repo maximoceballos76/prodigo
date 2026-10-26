@@ -430,8 +430,15 @@ tienda/pocketbase/  (servidor y base de datos)
   GitHub Pages solo sirve archivos fijos: no puede correr PocketBase. Por eso
   la versión publicada es de SOLO LECTURA:
     - Funcionan: portada, tienda, filtros y fichas de pieza.
-    - NO funcionan: cargar.html, admin.html (login, carga, modificar,
-      eliminar). Siguen funcionando en la computadora con PocketBase.
+    - admin.html y cargar.html funcionan en MODO DEMOSTRACIÓN (sesion.js):
+      se entra sin contraseña, arriba aparece un cartel que lo avisa, el
+      panel lista las piezas de tienda/datos/ y el formulario se puede
+      completar y revisar, pero guardar y eliminar NO cambian nada (muestran
+      la confirmación y aclaran que es una demostración).
+      Direcciones: .../prodigo/admin.html y .../prodigo/cargar.html
+    - El N.º de inventario no viene en tienda/datos/ (la API pública lo
+      oculta): en la demo se deduce del nombre de la primera foto
+      (fot_0003_x.jpg -> FOT-0003), en api.js > demo().
 
   CÓMO FUNCIONA
   - tienda/api.js detecta si la página corre en *.github.io (MODO_DEMO) y en

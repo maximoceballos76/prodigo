@@ -24,10 +24,10 @@
     "semantic_hash": "db9feac6ca40ec8b9db672878afab06c"
   },
   "DOCUMENTACION.txt": {
-    "mtime": 1792986878.0420027,
-    "seen": 1792988465.2353332,
-    "ast_hash": "73639f8ef5dbcc8bd2755b8caf8801ff",
-    "semantic_hash": "73639f8ef5dbcc8bd2755b8caf8801ff"
+    "mtime": 1793044457.4658523,
+    "seen": 1793044467.1626663,
+    "ast_hash": "22175e19eef59910344968d9f1c99aef",
+    "semantic_hash": ""
   },
   ".vscode/settings.json": {
     "mtime": 1792893399.2942848,
@@ -42,10 +42,10 @@
     "semantic_hash": "5d696bc7d65b2ffb23f3ae3b13d3a45c"
   },
   "tienda/api.js": {
-    "mtime": 1792904467.4444048,
-    "seen": 1792988465.2352622,
-    "ast_hash": "e43706607c46d6edf491056d4057ec76",
-    "semantic_hash": "e43706607c46d6edf491056d4057ec76"
+    "mtime": 1793044397.878697,
+    "seen": 1793044467.1625452,
+    "ast_hash": "e81cd0cc3c14bdbd307bddf1577258ce",
+    "semantic_hash": ""
   },
   "tienda/cabecera.js": {
     "mtime": 1792902652.7150977,
@@ -156,22 +156,22 @@
     "semantic_hash": "67e059edcff8252edb148dde166004ad"
   },
   "tienda/sesion.js": {
-    "mtime": 1792901880.5892582,
-    "seen": 1792904210.7953594,
-    "ast_hash": "14a6c490fd2d34aa3b6b7099b34cc8ce",
-    "semantic_hash": "14a6c490fd2d34aa3b6b7099b34cc8ce"
+    "mtime": 1793044398.7777257,
+    "seen": 1793044467.162657,
+    "ast_hash": "b38e19ce5878dcefc3a55223b4907994",
+    "semantic_hash": ""
   },
   "tienda/admin.html": {
-    "mtime": 1792988507.5533817,
-    "seen": 1793038200.088035,
-    "ast_hash": "edfc2dcd659f9a26ba3460a98d86d904",
-    "semantic_hash": "edfc2dcd659f9a26ba3460a98d86d904"
+    "mtime": 1793044416.1618178,
+    "seen": 1793044467.1627135,
+    "ast_hash": "06ad1d13bc76c4fbdae6c686d8314aa4",
+    "semantic_hash": ""
   },
   "tienda/cargar.html": {
-    "mtime": 1792901881.6385558,
-    "seen": 1792904210.7953753,
-    "ast_hash": "bb0142bbed42d5c9136d3b6aa2022329",
-    "semantic_hash": "bb0142bbed42d5c9136d3b6aa2022329"
+    "mtime": 1793044427.687999,
+    "seen": 1793044467.1627173,
+    "ast_hash": "a30149e71753b03d17e0789d2e2794ea",
+    "semantic_hash": ""
   },
   "tienda/index.html": {
     "mtime": 1792902681.266586,
@@ -186,9 +186,9 @@
     "semantic_hash": "4134b3c20e0ad54a34bbc7d85eee6377"
   },
   "tienda/tienda.html": {
-    "mtime": 1793038143.4788218,
-    "seen": 1793038200.088047,
-    "ast_hash": "9d1a2ca96b6f8fab09de4e7bb6a87c5e",
+    "mtime": 1793043120.5962453,
+    "seen": 1793043127.1363094,
+    "ast_hash": "30ac29e0a896852a6a560bf3c7bb4f71",
     "semantic_hash": ""
   },
   ".github/workflows/pages.yml": {
