@@ -31,22 +31,54 @@
     .panel input:focus, .panel select:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
     .panel .boton { border: 0; font: inherit; cursor: pointer; }
 
-    /* Menú: acciones principales y resumen por categoría */
+    /* Menú: acciones principales y totales generales */
     .encabezado-panel { display: flex; justify-content: space-between; align-items: center; gap: 0 1.5rem; flex-wrap: wrap; margin-bottom: 1.75rem; }
     .encabezado-panel .intro { margin-bottom: 0; }
-    .resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
-    .resumen button {
-      all: unset; box-sizing: border-box; cursor: pointer;
-      background: var(--superficie); border: 1px solid var(--linea); border-radius: 10px; padding: 1rem 1.15rem;
+    .totales { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .totales div { background: var(--superficie); border: 1px solid var(--linea); border-radius: 10px; padding: 0.9rem 1.1rem; }
+    .totales small { display: block; color: var(--tinta-suave); font-size: 0.8rem; }
+    .totales strong { font-size: 1.75rem; font-weight: 600; line-height: 1.2; }
+
+    /* Lista lateral de categorías (pensada para muchas: buscador, orden y barra de tamaño) */
+    .cuerpo-panel { display: grid; grid-template-columns: 18rem minmax(0, 1fr); gap: 2rem; align-items: start; }
+    .cats {
+      position: sticky; top: 5.5rem; max-height: calc(100vh - 7rem); display: flex; flex-direction: column;
+      background: var(--superficie); border: 1px solid var(--linea); border-radius: 10px;
     }
-    .resumen button:hover, .resumen button[aria-pressed="true"] { border-color: var(--acento); }
-    .resumen button:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
-    .resumen strong { display: block; font-family: "Newsreader", Georgia, serif; font-weight: 500; font-size: 1.2rem; }
-    .resumen .numero { font-size: 2rem; font-weight: 600; line-height: 1.2; }
-    .resumen small { color: var(--tinta-suave); }
+    .cats-cabeza { padding: 0.9rem 1rem 0.75rem; border-bottom: 1px solid var(--linea); display: grid; gap: 0.6rem; }
+    .cats-cabeza div { display: flex; justify-content: space-between; align-items: baseline; }
+    .panel .cats-cabeza h2 { font-size: 1.2rem; }
+    .cats-cabeza .orden { all: unset; cursor: pointer; font-size: 0.8rem; color: var(--tinta-suave); text-decoration: underline; text-underline-offset: 3px; }
+    .panel .cats-cabeza input { padding: 0.45rem 0.7rem; font-size: 0.9rem; }
+    .cats ul { list-style: none; padding: 0.35rem; overflow-y: auto; }
+    .cats li button {
+      all: unset; box-sizing: border-box; cursor: pointer; width: 100%;
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.15rem 0.5rem; align-items: center;
+      padding: 0.5rem 0.65rem; border-radius: 6px;
+    }
+    .cats li button:hover { background: var(--fondo); }
+    .cats li button:focus-visible { outline: 2px solid var(--acento); outline-offset: -2px; }
+    .cats li button[aria-pressed="true"] { background: var(--acento); color: var(--acento-texto); }
+    .cats li button[aria-pressed="true"] .barra { background: rgb(255 255 255 / 0.25); }
+    .cats li button[aria-pressed="true"] .barra i { background: var(--acento-texto); }
+    .cats .nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.92rem; }
+    .cats .n { font-size: 0.8rem; font-variant-numeric: tabular-nums; opacity: 0.75; }
+    .cats .barra { grid-column: 1 / -1; height: 3px; border-radius: 3px; background: var(--linea); overflow: hidden; }
+    .cats .barra i { display: block; height: 100%; background: var(--acento); }
+    .cats .todas { border-bottom: 1px solid var(--linea); margin-bottom: 0.25rem; padding-bottom: 0.25rem; }
+    .cats .nada { padding: 0.75rem; font-size: 0.85rem; color: var(--tinta-suave); }
+    .selector-cat { display: none; }
 
     /* Listado de piezas */
-    .herramientas { display: grid; grid-template-columns: 1fr 15rem; gap: 0.75rem; margin: 1rem 0 0.75rem; }
+    .titulo-lista { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 0.25rem; }
+    .titulo-lista button { all: unset; cursor: pointer; font-size: 0.85rem; color: var(--tinta-suave); text-decoration: underline; text-underline-offset: 3px; }
+    .herramientas { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin: 0.5rem 0 0.75rem; }
+    .panel .herramientas input { flex: 1 1 18rem; width: auto; }
+    .estados { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+    .estados button { border: 1px solid var(--linea); background: var(--superficie); border-radius: 999px; padding: 0.4rem 0.85rem; font: inherit; font-size: 0.85rem; color: inherit; cursor: pointer; }
+    .estados button[aria-pressed="true"] { background: var(--tinta); color: var(--fondo); border-color: var(--tinta); }
+    .mas { display: block; margin: 1.25rem auto 0; background: none; border: 1px solid var(--linea); border-radius: 999px; padding: 0.6rem 1.4rem; font: inherit; color: inherit; cursor: pointer; }
+    .mas:hover { border-color: var(--acento); }
     .cantidad { color: var(--tinta-suave); font-size: 0.9rem; margin-bottom: 0.75rem; }
     .lista { list-style: none; padding: 0; border-top: 1px solid var(--linea); }
     .fila {
@@ -66,8 +98,19 @@
     .chico[disabled] { opacity: 0.6; cursor: wait; }
     .ver { font-size: 0.85rem; color: var(--tinta-suave); margin-right: 0.25rem; }
 
+    /* En pantallas chicas la lista de categorías se abre como hoja desde abajo */
+    @media (max-width: 860px) {
+      .cuerpo-panel { grid-template-columns: 1fr; }
+      .cats { display: none; }
+      .cats.abierto { display: flex; position: fixed; inset: auto 0 0 0; z-index: 40; max-height: 75vh; border-radius: 14px 14px 0 0; box-shadow: 0 -10px 40px rgb(0 0 0 / 0.2); }
+      .selector-cat {
+        display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1rem;
+        padding: 0.7rem 0.9rem; background: var(--superficie); border: 1px solid var(--linea); border-radius: 8px; font: inherit; color: inherit; cursor: pointer;
+      }
+      .velo { position: fixed; inset: 0; z-index: 35; background: rgb(38 35 30 / 0.4); }
+      .totales { grid-template-columns: 1fr 1fr; }
+    }
     @media (max-width: 700px) {
-      .herramientas { grid-template-columns: 1fr; }
       .fila { grid-template-columns: 56px minmax(0, 1fr); }
       .fila img, .fila .sin-foto { width: 56px; height: 56px; }
       .fila .precio, .fila .acciones { grid-column: 2; }
@@ -111,19 +154,32 @@
       </div>
 
       <div class="aviso" id="aviso" role="status" hidden></div>
-      <div class="resumen" id="resumen"></div>
+      <div class="totales" id="totales"></div>
 
-      <section aria-labelledby="titulo-piezas">
-        <h2 id="titulo-piezas">Piezas</h2>
-        <div class="herramientas">
-          <input type="search" id="buscar" placeholder="Buscar por título, inventario, marca, lugar, fotógrafo…" aria-label="Buscar piezas">
-          <select id="filtro-cat" aria-label="Categoría"></select>
-        </div>
-        <p class="cantidad" id="cantidad" aria-live="polite"></p>
-        <ul class="lista" id="lista"><li class="fila">Cargando…</li></ul>
-      </section>
+      <div class="cuerpo-panel">
+        <aside class="cats" id="cats" aria-label="Categorías">
+          <div class="cats-cabeza">
+            <div><h2 id="cats-titulo">Categorías</h2><button type="button" class="orden" id="orden-cats" title="Cambiar el orden"></button></div>
+            <input type="search" id="buscar-cat" placeholder="Buscar categoría" aria-label="Buscar categoría">
+          </div>
+          <ul id="lista-cats"></ul>
+        </aside>
+
+        <section aria-labelledby="titulo-piezas">
+          <button type="button" class="selector-cat" id="abrir-cats"><span id="cat-actual"></span><span>Cambiar ▾</span></button>
+          <div class="titulo-lista"><h2 id="titulo-piezas">Todas las piezas</h2><button type="button" id="ver-todas" hidden>Ver todas las categorías</button></div>
+          <div class="herramientas">
+            <input type="search" id="buscar" placeholder="Buscar por título, inventario, marca, lugar, fotógrafo…" aria-label="Buscar piezas">
+            <div class="estados" id="estados" role="group" aria-label="Estado"></div>
+          </div>
+          <p class="cantidad" id="cantidad" aria-live="polite"></p>
+          <ul class="lista" id="lista"><li class="fila">Cargando…</li></ul>
+          <button type="button" class="mas" id="mas" hidden></button>
+        </section>
+      </div>
     </section>
   </main>
+  <div class="velo" id="velo" hidden></div>
 
   <script src="api.js"></script>
   <script src="sesion.js"></script>
@@ -202,43 +258,81 @@
         $("lista").innerHTML = "";
         return avisar("No se pudieron traer las piezas. Revisá que PocketBase esté corriendo.");
       }
-      $("filtro-cat").innerHTML = `<option value="">Todas las categorías</option>` +
-        categorias.map(c => `<option value="${esc(c.slug)}">${esc(c.nombre)}</option>`).join("");
-      pintarResumen();
-      pintarLista();
+      pintarTodo();
     }
 
     const enTienda = p => p.visible && p.destino === DESTINO_VENTA;
+    const deCat = slug => slug ? piezas.filter(p => p._cat.slug === slug) : piezas;
+    const POR_PAGINA = 40;
+    let catActiva = "";       // "" = todas
+    let estadoActivo = "";
+    let ordenCats = "nombre"; // o "cantidad"
+    let limite = POR_PAGINA;
 
-    function pintarResumen() {
-      $("resumen").innerHTML = categorias.map(c => {
-        const de = piezas.filter(p => p._cat.slug === c.slug);
-        const ocultas = de.filter(p => !p.visible).length;
-        return `<button type="button" data-cat="${esc(c.slug)}" aria-pressed="${$("filtro-cat").value === c.slug}">
-          <strong>${esc(c.nombre)}</strong>
-          <span class="numero">${de.length}</span>
-          <small>${de.filter(enTienda).length} en la tienda${ocultas ? ` · ${ocultas} ${ocultas === 1 ? "oculta" : "ocultas"}` : ""}</small>
-        </button>`;
-      }).join("");
+    // Filtros rápidos por estado: [id, etiqueta, condición]
+    const ESTADOS = [
+      ["", "Todas", () => true],
+      ["tienda", "En la tienda", enTienda],
+      ["reservada", "Reservadas", p => p.destino === DESTINO_VENTA && p.estado === "Reservada"],
+      ["oculta", "Ocultas", p => !p.visible],
+      ["fuera", "Fuera de venta", p => p.destino !== DESTINO_VENTA],
+    ];
+
+    function pintarTodo() {
+      pintarTotales();
+      pintarCats();
+      pintarLista();
+    }
+
+    function pintarTotales() {
+      const datos = [["Piezas", piezas.length], ...ESTADOS.slice(1, 4).map(([, nombre, f]) => [nombre, piezas.filter(f).length])];
+      $("totales").innerHTML = datos.map(([t, n]) => `<div><small>${t}</small><strong>${n.toLocaleString("es-AR")}</strong></div>`).join("");
+    }
+
+    function pintarCats() {
+      const q = normalizar($("buscar-cat").value);
+      const lista = categorias.map(c => ({ c, de: deCat(c.slug) })).filter(({ c }) => !q || normalizar(c.nombre).includes(q));
+      lista.sort(ordenCats === "nombre" ? (a, b) => a.c.nombre.localeCompare(b.c.nombre, "es") : (a, b) => b.de.length - a.de.length);
+      const max = Math.max(1, ...categorias.map(c => deCat(c.slug).length));
+      const boton = (slug, nombre, de) => `<li${slug ? "" : ' class="todas"'}>
+        <button type="button" data-cat="${esc(slug)}" aria-pressed="${catActiva === slug}" title="${de.filter(enTienda).length} de ${de.length} en la tienda">
+          <span class="nombre">${esc(nombre)}</span><span class="n">${de.length}</span>
+          ${slug ? `<span class="barra"><i style="width:${(de.length / max) * 100}%"></i></span>` : ""}
+        </button></li>`;
+      $("lista-cats").innerHTML = (q ? "" : boton("", "Todas las categorías", piezas))
+        + (lista.length ? lista.map(({ c, de }) => boton(c.slug, c.nombre, de)).join("") : `<li class="nada">Ninguna categoría coincide.</li>`);
+      $("cats-titulo").textContent = `Categorías (${categorias.length})`;
+      $("orden-cats").textContent = ordenCats === "nombre" ? "A–Z" : "Más piezas";
     }
 
     // Busca sin importar mayúsculas ni tildes, en todos los datos de texto de la pieza
     const normalizar = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
     function pintarLista() {
-      const cat = $("filtro-cat").value;
+      const base = deCat(catActiva);
+      const nombre = categorias.find(c => c.slug === catActiva)?.nombre;
+      $("titulo-piezas").textContent = nombre || "Todas las piezas";
+      $("cat-actual").textContent = nombre || `Todas las categorías (${categorias.length})`;
+      $("ver-todas").hidden = !catActiva;
+      $("estados").innerHTML = ESTADOS.map(([id, etiqueta, f]) =>
+        `<button type="button" data-estado="${id}" aria-pressed="${estadoActivo === id}">${etiqueta} · ${base.filter(f).length}</button>`).join("");
+
+      const condicion = ESTADOS.find(e => e[0] === estadoActivo)[2];
       const palabras = normalizar($("buscar").value).split(/\s+/).filter(Boolean);
-      const visibles = piezas.filter(p => {
-        if (cat && p._cat.slug !== cat) return false;
+      const visibles = base.filter(p => {
+        if (!condicion(p)) return false;
         const texto = normalizar(Object.values(p).filter(v => typeof v === "string").join(" ") + " " + p._cat.nombre);
         return palabras.every(w => texto.includes(w));
       });
       $("cantidad").textContent = visibles.length + (visibles.length === 1 ? " pieza" : " piezas");
+      const resto = visibles.length - limite;
+      $("mas").hidden = resto <= 0;
+      $("mas").textContent = `Mostrar ${Math.min(resto, POR_PAGINA)} más (quedan ${resto})`;
       if (!visibles.length) {
         $("lista").innerHTML = `<li class="fila" style="display:block">Ninguna pieza coincide con la búsqueda.</li>`;
         return;
       }
-      $("lista").innerHTML = visibles.map(p => {
+      $("lista").innerHTML = visibles.slice(0, limite).map(p => {
         const foto = archivosDe(p)[0];
         const enlace = `c=${encodeURIComponent(p.collectionName)}&id=${encodeURIComponent(p.id)}`;
         const etiquetas = [
@@ -263,17 +357,27 @@
       }).join("");
     }
 
-    $("buscar").addEventListener("input", pintarLista);
-    $("filtro-cat").addEventListener("change", () => { pintarResumen(); pintarLista(); });
+    // Cualquier cambio de filtro vuelve a la primera página del listado
+    const refiltrar = () => { limite = POR_PAGINA; pintarLista(); };
+    const cajonCats = abrir => { $("cats").classList.toggle("abierto", abrir); $("velo").hidden = !abrir; };
+    const elegirCat = slug => { catActiva = slug; cajonCats(false); pintarCats(); refiltrar(); };
 
-    // Las tarjetas del resumen filtran por categoría (otro clic: todas)
-    $("resumen").addEventListener("click", e => {
+    $("buscar").addEventListener("input", refiltrar);
+    $("lista-cats").addEventListener("click", e => {
       const b = e.target.closest("button[data-cat]");
-      if (!b) return;
-      $("filtro-cat").value = $("filtro-cat").value === b.dataset.cat ? "" : b.dataset.cat;
-      pintarResumen();
-      pintarLista();
+      if (b) elegirCat(b.dataset.cat);
     });
+    $("ver-todas").addEventListener("click", () => elegirCat(""));
+    $("buscar-cat").addEventListener("input", pintarCats);
+    $("orden-cats").addEventListener("click", () => { ordenCats = ordenCats === "nombre" ? "cantidad" : "nombre"; pintarCats(); });
+    $("estados").addEventListener("click", e => {
+      const b = e.target.closest("button[data-estado]");
+      if (b) { estadoActivo = b.dataset.estado; refiltrar(); }
+    });
+    $("mas").addEventListener("click", () => { limite += POR_PAGINA; pintarLista(); });
+    $("abrir-cats").addEventListener("click", () => cajonCats(true));
+    $("velo").addEventListener("click", () => cajonCats(false));
+    document.addEventListener("keydown", e => { if (e.key === "Escape") cajonCats(false); });
 
     $("lista").addEventListener("click", async e => {
       const b = e.target.closest("[data-eliminar]");
@@ -293,8 +397,7 @@
         }
         piezas = piezas.filter(x => x !== p);
         avisar(`«${p.titulo}» se eliminó.`, true);
-        pintarResumen();
-        pintarLista();
+        pintarTodo();
       } catch (err) {
         console.error(err);
         b.disabled = false;

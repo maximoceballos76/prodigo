@@ -150,9 +150,15 @@ DESDE DÓNDE SE ENTRA
 
 QUÉ TIENE
   - Botón "+ Cargar pieza nueva" (abre cargar.html).
-  - Resumen por categoría: total de piezas, cuántas están en la tienda y
-    cuántas ocultas. Al tocar una tarjeta filtra el listado por esa
-    categoría (otro toque: todas).
+  - Totales generales arriba: piezas, en la tienda, reservadas y ocultas.
+  - Lista de categorías a la izquierda (pensada para muchas): cada una con
+    su cantidad y una barra según su tamaño; buscador de categorías y orden
+    A–Z o por cantidad ("A–Z" / "Más piezas"). Al elegir una, el listado
+    muestra solo esa categoría. En celular se abre con el botón
+    "Cambiar ▾", como hoja desde abajo.
+  - Filtros rápidos por estado sobre el listado, con su cantidad: Todas,
+    En la tienda, Reservadas, Ocultas, Fuera de venta.
+  - El listado muestra 40 piezas y un botón "Mostrar más".
   - LISTADO DE TODAS LAS PIEZAS (también las ocultas y las que no son de
     Venta), ordenado por N.º de inventario, con foto, título, inventario,
     categoría, precio y etiquetas (Oculta / destino si no es Venta /
@@ -160,7 +166,6 @@ QUÉ TIENE
   - Buscador: busca en todos los datos de texto de la pieza (título,
     inventario, descripción, marca, lugar, fotógrafo...), sin importar
     mayúsculas ni tildes. Varias palabras = tienen que estar todas.
-  - Filtro por categoría.
   - En cada pieza:
       Ver        abre la ficha pública (solo si está en la tienda).
       Modificar  abre cargar.html?c=<colección>&id=<id> (modo edición).
