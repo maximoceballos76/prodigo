@@ -14,26 +14,44 @@
   <header class="cabecera" id="cabecera"></header>
   <script src="cabecera.js"></script>
 
-  <main class="catalogo">
-    <div class="portada">
-      <h1>Tienda</h1>
-      <p>Piezas de la colección disponibles para la venta.</p>
-    </div>
+  <div class="disposicion">
+    <aside class="lateral" id="lateral" aria-label="Categorías y filtros">
+      <div class="lateral-cabeza"><span class="marca">Filtrar</span><button type="button" id="cerrar" aria-label="Cerrar">×</button></div>
+      <h2 class="etiqueta">Categorías</h2>
+      <ul class="lista-cats" id="lista-categorias"></ul>
+      <div id="filtros"></div>
+    </aside>
 
-    <nav class="categorias" aria-label="Categorías">
-      <ul id="lista-categorias"></ul>
-    </nav>
-
-    <div class="filtros" id="filtros" hidden></div>
-
-    <section aria-live="polite">
-      <div class="encabezado-lista">
-        <h2 id="titulo-lista">Todas las piezas</h2>
-        <p id="cantidad"></p>
+    <main aria-live="polite">
+      <div class="barra-lista">
+        <div>
+          <h1 id="titulo-lista">Todas las piezas</h1>
+          <p id="cantidad"></p>
+        </div>
+        <div class="herramientas">
+          <button type="button" class="boton-filtros" id="abrir">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            Filtrar
+          </button>
+          <label class="buscador">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="busqueda" placeholder="Buscar piezas" aria-label="Buscar piezas">
+          </label>
+          <label class="orden">Ordenar
+            <select id="orden">
+              <option value="">Más recientes</option>
+              <option value="precio-asc">Precio: menor a mayor</option>
+              <option value="precio-desc">Precio: mayor a menor</option>
+              <option value="titulo">Título A–Z</option>
+            </select>
+          </label>
+        </div>
       </div>
+      <div class="chips" id="chips"></div>
       <div class="grilla" id="grilla"><p>Cargando…</p></div>
-    </section>
-  </main>
+    </main>
+  </div>
+  <div class="velo" id="velo" hidden></div>
 
   <script src="api.js"></script>
   <script>
@@ -41,7 +59,7 @@
     let categorias = [];
     let piezas = [];
     let activa = TODAS;
-    let filtros = {};   // campo -> valor elegido, dentro de la categoría activa
+    let filtros = {};   // campo -> Set de valores elegidos, dentro de la categoría activa. Dentro de un campo es "o", entre campos es "y".
 
     // Especificaciones por las que se puede filtrar en cada categoría (slug: [campo, etiqueta]).
     // Las opciones salen de los valores que tienen las piezas cargadas.
@@ -51,44 +69,64 @@
       maquinas_de_escribir: [["marca", "Marca"], ["origen", "País de origen"], ["funcionamiento", "Funcionamiento"], ["teclado", "Teclado"]],
     };
 
-    const grilla = document.getElementById("grilla");
-    const lista = document.getElementById("lista-categorias");
-    const cajaFiltros = document.getElementById("filtros");
+    const $ = id => document.getElementById(id);
+    const grilla = $("grilla");
 
-    const deCategoria = () => activa === TODAS ? piezas : piezas.filter(p => p._cat.slug === activa);
+    const deCategoria = slug => slug === TODAS ? piezas : piezas.filter(p => p._cat.slug === slug);
+    const precioDe = p => Number(p.precio_usd ?? p.precio) || 0;
+    // Para buscar sin importar mayúsculas ni tildes
+    const normalizar = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-    function pintarFiltros() {
-      const enCat = deCategoria();
-      const html = (FILTROS[activa] || []).map(([campo, etiqueta]) => {
-        const valores = [...new Set(enCat.map(p => p[campo]).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
-        if (!valores.length) return "";
-        return `<label>${etiqueta}
-          <select data-filtro="${campo}">
-            <option value="">Todos</option>
-            ${valores.map(v => `<option${v === filtros[campo] ? " selected" : ""}>${esc(v)}</option>`).join("")}
-          </select></label>`;
-      }).join("");
-      cajaFiltros.innerHTML = html + (Object.keys(filtros).length ? `<button type="button" class="limpiar">Quitar filtros</button>` : "");
-      cajaFiltros.hidden = !html;
+    // Valores distintos de un campo dentro de una lista de piezas, con su cantidad
+    function valores(lista, campo) {
+      const cuenta = {};
+      lista.forEach(p => { if (p[campo]) cuenta[p[campo]] = (cuenta[p[campo]] || 0) + 1; });
+      return Object.entries(cuenta).sort((a, b) => a[0].localeCompare(b[0], "es"));
     }
 
     function pintarCategorias() {
       const items = [{ slug: TODAS, nombre: "Todas" }, ...categorias];
-      lista.innerHTML = items.map(c => {
-        const total = c.slug === TODAS ? piezas.length : piezas.filter(p => p._cat.slug === c.slug).length;
-        return `<li><button type="button" data-cat="${esc(c.slug)}" aria-pressed="${c.slug === activa}"><span>${esc(c.nombre)}</span><span>${total}</span></button></li>`;
-      }).join("");
+      $("lista-categorias").innerHTML = items.map(c => `<li><button type="button" data-cat="${esc(c.slug)}" aria-pressed="${c.slug === activa}">
+        <span>${esc(c.nombre)}</span><span>${deCategoria(c.slug).length}</span></button></li>`).join("");
+    }
+
+    function pintarFiltros() {
+      const enCat = deCategoria(activa);
+      const grupos = (FILTROS[activa] || []).map(([campo, etiqueta]) => [campo, etiqueta, valores(enCat, campo)]).filter(g => g[2].length);
+      $("filtros").innerHTML = grupos.length
+        ? `<h2 class="etiqueta">Filtros</h2>` + grupos.map(([campo, etiqueta, vals], i) => `
+          <details class="grupo"${i < 2 || filtros[campo]?.size ? " open" : ""}>
+            <summary>${esc(etiqueta)}</summary>
+            <div class="opciones">${vals.map(([v, n]) => `
+              <label><input type="checkbox" data-campo="${esc(campo)}" value="${esc(v)}"${filtros[campo]?.has(v) ? " checked" : ""}> ${esc(v)} <small>${n}</small></label>`).join("")}
+            </div>
+          </details>`).join("")
+        : `<p class="sin-filtros">${activa === TODAS ? "Elegí una categoría para ver sus filtros." : "Esta categoría todavía no tiene filtros."}</p>`;
+
+      const activos = Object.entries(filtros).flatMap(([campo, set]) => [...set].map(v => [campo, v]));
+      $("chips").innerHTML = activos.map(([campo, v]) => `<button type="button" class="chip" data-campo="${esc(campo)}" data-valor="${esc(v)}" aria-label="Quitar filtro ${esc(v)}">${esc(v)}</button>`).join("")
+        + (activos.length ? `<button type="button" class="enlace" id="limpiar">Quitar todo</button>` : "");
     }
 
     function pintarPiezas() {
-      const visibles = deCategoria().filter(p => Object.entries(filtros).every(([campo, valor]) => p[campo] === valor));
+      const q = normalizar($("busqueda").value.trim());
+      const campos = Object.values(FILTROS).flat().map(([campo]) => campo);
+      const visibles = deCategoria(activa).filter(p =>
+        Object.entries(filtros).every(([campo, set]) => set.has(p[campo])) &&
+        (!q || normalizar([p.titulo, p.fecha, p.descripcion, p._cat.nombre, ...campos.map(c => p[c])].join(" ")).includes(q)));
+
+      const orden = $("orden").value;
+      if (orden === "precio-asc") visibles.sort((a, b) => precioDe(a) - precioDe(b));
+      if (orden === "precio-desc") visibles.sort((a, b) => precioDe(b) - precioDe(a));
+      if (orden === "titulo") visibles.sort((a, b) => String(a.titulo).localeCompare(String(b.titulo), "es"));
+
       const cat = categorias.find(c => c.slug === activa);
-      document.getElementById("titulo-lista").textContent = cat ? cat.nombre : "Todas las piezas";
-      document.getElementById("cantidad").textContent = visibles.length + (visibles.length === 1 ? " pieza" : " piezas");
+      $("titulo-lista").textContent = cat ? cat.nombre : "Todas las piezas";
+      $("cantidad").textContent = visibles.length + (visibles.length === 1 ? " pieza" : " piezas");
 
       if (!visibles.length) {
-        grilla.innerHTML = Object.keys(filtros).length
-          ? `<p>Ninguna pieza coincide con los filtros elegidos.</p>`
+        grilla.innerHTML = Object.keys(filtros).length || q
+          ? `<p>Ninguna pieza coincide con lo elegido.</p>`
           : `<p>Todavía no hay piezas en venta en esta categoría.</p>`;
         return;
       }
@@ -107,30 +145,50 @@
       }).join("");
     }
 
-    lista.addEventListener("click", e => {
+    function pintar() {
+      pintarCategorias();
+      pintarFiltros();
+      pintarPiezas();
+    }
+
+    $("lista-categorias").addEventListener("click", e => {
       const b = e.target.closest("button[data-cat]");
       if (!b) return;
       activa = b.dataset.cat;
       filtros = {};
-      pintarCategorias();
-      pintarFiltros();
-      pintarPiezas();
+      pintar();
     });
 
-    cajaFiltros.addEventListener("change", e => {
-      const campo = e.target.dataset.filtro;
+    $("filtros").addEventListener("change", e => {
+      const { campo } = e.target.dataset;
       if (!campo) return;
-      if (e.target.value) filtros[campo] = e.target.value; else delete filtros[campo];
+      (filtros[campo] ||= new Set())[e.target.checked ? "add" : "delete"](e.target.value);
+      if (!filtros[campo].size) delete filtros[campo];
       pintarFiltros();
       pintarPiezas();
     });
 
-    cajaFiltros.addEventListener("click", e => {
-      if (!e.target.closest(".limpiar")) return;
-      filtros = {};
+    $("chips").addEventListener("click", e => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      if (b.id === "limpiar") filtros = {};
+      else {
+        filtros[b.dataset.campo].delete(b.dataset.valor);
+        if (!filtros[b.dataset.campo].size) delete filtros[b.dataset.campo];
+      }
       pintarFiltros();
       pintarPiezas();
     });
+
+    $("busqueda").addEventListener("input", pintarPiezas);
+    $("orden").addEventListener("change", pintarPiezas);
+
+    // Celular: el lateral se abre como cajón
+    const cajon = abrir => { $("lateral").classList.toggle("abierto", abrir); $("velo").hidden = !abrir; };
+    $("abrir").addEventListener("click", () => cajon(true));
+    $("cerrar").addEventListener("click", () => cajon(false));
+    $("velo").addEventListener("click", () => cajon(false));
+    document.addEventListener("keydown", e => { if (e.key === "Escape") cajon(false); });
 
     async function iniciar() {
       try {
@@ -140,8 +198,7 @@
           return items.map(p => ({ ...p, _cat: c }));
         }));
         piezas = grupos.flat();
-        pintarCategorias();
-        pintarPiezas();
+        pintar();
       } catch (err) {
         console.error(err);
         grilla.innerHTML = `<div class="vacio"><h1>No se pudo cargar el catálogo</h1><p>Revisá que PocketBase esté corriendo y que la dirección en api.js sea la correcta.</p></div>`;

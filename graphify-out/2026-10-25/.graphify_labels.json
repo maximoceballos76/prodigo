@@ -1,1 +1,25 @@
-{"0": "Datos y colecciones PocketBase", "1": "Formulario de carga", "2": "Panel: carga y resumen", "3": "Visualización de piezas", "4": "Acceso y login de editores", "5": "Portada, encabezado y secciones", "6": "Sesión compartida", "7": "Modo edición y eliminar", "8": "Migración simplificar carga", "9": "Migración postales y máquinas", "10": "Reglas de graphify", "11": "Encabezado común (cabecera.js)", "12": "Datos de ejemplo viejos", "13": "Migración color postales", "14": "Migración campo fuente", "15": "Migración editores eliminan", "16": "Migración editores listan ocultas", "17": "README del proyecto", "18": "Hook ocultar inventario", "19": "Hook validar venta", "20": "Reglas de venta", "21": "Migración crear categorías", "22": "Migración crear fotografías", "23": "Migración precio en fotografías", "24": "Migración reglas de categorías", "25": "Migración destino en fotografías", "26": "Migración campos de fotografías", "27": "Migración cuentas editores"}
+{
+  "0": "Datos y colecciones PocketBase",
+  "3": "Visualización de piezas",
+  "6": "Sesión compartida",
+  "8": "Migración simplificar carga",
+  "9": "Migración postales y máquinas",
+  "10": "Reglas de graphify",
+  "11": "Encabezado común (cabecera.js)",
+  "12": "Datos de ejemplo viejos",
+  "13": "Migración color postales",
+  "14": "Migración campo fuente",
+  "15": "Migración editores eliminan",
+  "16": "Migración editores listan ocultas",
+  "17": "README del proyecto",
+  "18": "Hook ocultar inventario",
+  "19": "Hook validar venta",
+  "20": "Reglas de venta",
+  "21": "Migración crear categorías",
+  "22": "Migración crear fotografías",
+  "23": "Migración precio en fotografías",
+  "24": "Migración reglas de categorías",
+  "25": "Migración destino en fotografías",
+  "26": "Migración campos de fotografías",
+  "27": "Migración cuentas editores"
+}

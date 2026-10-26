@@ -230,19 +230,26 @@ tienda/  (la web; es la carpeta que se sirve)
                Estilos: sección "Portada" de style.css.
 
   tienda.html  CATÁLOGO / TIENDA (sección "tienda"; antes era index.html).
-               - Título "Tienda" y, debajo, las categorías como PESTAÑAS
-                 horizontales con la cantidad de piezas de cada una; al tocar
-                 una filtra la grilla. En celular las pestañas se deslizan.
+               - MENÚ LATERAL a la izquierda (idea 1 de ideas-diseños/): las
+                 categorías con la cantidad de piezas de cada una y, debajo,
+                 los filtros. En celular (menos de 820px) el lateral se
+                 esconde y se abre como cajón con el botón "Filtrar".
+               - Arriba de la grilla: buscador (título, fecha, descripción y
+                 especificaciones; sin importar tildes ni mayúsculas) y orden
+                 (más recientes, precio, título A–Z).
                - FILTROS POR ESPECIFICACIÓN: al elegir una categoría aparecen
-                 listas desplegables con sus especificaciones (constante
+                 grupos de CASILLAS con sus especificaciones (constante
                  FILTROS en tienda.html):
                    Fotografías:  fotógrafo, colección, soporte, proceso.
                    Postales:     color, lugar, editorial, circulación.
                    Máquinas:     marca, país de origen, funcionamiento, teclado.
-                 Las opciones de cada lista salen de los valores que tienen
-                 las piezas cargadas (si ninguna pieza tiene el dato, la
-                 lista no aparece). Se pueden combinar; "Quitar filtros" los
-                 borra y al cambiar de categoría se reinician. Para filtrar
+                 Las opciones de cada grupo salen de los valores que tienen
+                 las piezas cargadas, con su cantidad (si ninguna pieza tiene
+                 el dato, el grupo no aparece). Dentro de un grupo se suman
+                 opciones ("o"); entre grupos se combinan ("y"). Los filtros
+                 activos se ven como chips sobre la grilla: tocar uno lo
+                 quita y "Quitar todo" los borra. Al cambiar de categoría se
+                 reinician. Para filtrar
                  por otro campo: sumarlo a FILTROS en la categoría que
                  corresponda. Conviene que sean campos de lista (select) o
                  con valores escritos siempre igual: "Olivetti" y "olivetti"
@@ -289,7 +296,7 @@ tienda/  (la web; es la carpeta que se sirve)
                  esc(s)           escapa texto antes de meterlo en el HTML.
 
   style.css    Estilos de todo el sitio: las tres paletas (data-theme en
-               <body>), encabezado común, pestañas de categorías, grilla,
+               <body>), encabezado común, menú lateral de la tienda, grilla,
                ficha y versión móvil.
                cargar.html suma estilos propios dentro del archivo.
 
