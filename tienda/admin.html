@@ -150,7 +150,10 @@
           <h1>Panel de administración</h1>
           <p class="intro">Cargá piezas nuevas o buscá una para modificarla o eliminarla.</p>
         </div>
-        <a class="boton" href="cargar.html">+ Cargar pieza nueva</a>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <a class="boton" href="cargar.html?para=museo">+ Pieza de museo</a>
+          <a class="boton" href="cargar.html?para=tienda">+ Pieza para la tienda</a>
+        </div>
       </div>
 
       <div class="aviso" id="aviso" role="status" hidden></div>
@@ -237,17 +240,8 @@
       $("quien").textContent = "Ingresaste como " + sesion.nombre;
       mostrar("vista-panel");
       try {
-        categorias = await listarCategorias();
-        const grupos = await Promise.all(categorias.map(async c => {
-          if (MODO_DEMO) return (await demo(c.coleccion || c.slug)).map(p => ({ ...p, _cat: c }));
-          // shortcut: hasta 500 piezas por categoría en una sola consulta; paginar si alguna crece más
-          const r = await fetch(`${PB_URL}/api/collections/${c.coleccion || c.slug}/records?sort=inventario&perPage=500`,
-            { headers: { Authorization: sesion.token } });
-          if (r.status === 401 || r.status === 403) throw new Error("sesion");
-          if (!r.ok) throw new Error("PocketBase respondió " + r.status);
-          return (await r.json()).items.map(p => ({ ...p, _cat: c }));
-        }));
-        piezas = grupos.flat();
+        ({ categorias, piezas } = await cargarCatalogo({ token: sesion.token }));
+        piezas.sort((a, b) => String(a.inventario).localeCompare(String(b.inventario), "es", { numeric: true }));
       } catch (err) {
         console.error(err);
         if (err.message === "sesion") {
@@ -270,13 +264,15 @@
     let ordenCats = "nombre"; // o "cantidad"
     let limite = POR_PAGINA;
 
-    // Filtros rápidos por estado: [id, etiqueta, condición]
+    const esMuseo = p => p.destino === "Museo Miranda" || p.destino === "Museo Ezeiza";
+    // Filtros rápidos: [id, etiqueta, condición]. Los cuatro primeros después de "Todas" son los totales de arriba.
     const ESTADOS = [
       ["", "Todas", () => true],
-      ["tienda", "En la tienda", enTienda],
+      ["tienda", "Tienda", p => p.destino === DESTINO_VENTA],
+      ["museo", "Museo", esMuseo],
       ["reservada", "Reservadas", p => p.destino === DESTINO_VENTA && p.estado === "Reservada"],
       ["oculta", "Ocultas", p => !p.visible],
-      ["fuera", "Fuera de venta", p => p.destino !== DESTINO_VENTA],
+      ["sin", "Sin destino", p => !esMuseo(p) && p.destino !== DESTINO_VENTA],
     ];
 
     function pintarTodo() {
@@ -286,7 +282,7 @@
     }
 
     function pintarTotales() {
-      const datos = [["Piezas", piezas.length], ...ESTADOS.slice(1, 4).map(([, nombre, f]) => [nombre, piezas.filter(f).length])];
+      const datos = [["Piezas", piezas.length], ...ESTADOS.slice(1, 5).map(([, nombre, f]) => [nombre, piezas.filter(f).length])];
       $("totales").innerHTML = datos.map(([t, n]) => `<div><small>${t}</small><strong>${n.toLocaleString("es-AR")}</strong></div>`).join("");
     }
 
@@ -306,9 +302,6 @@
       $("orden-cats").textContent = ordenCats === "nombre" ? "A–Z" : "Más piezas";
     }
 
-    // Busca sin importar mayúsculas ni tildes, en todos los datos de texto de la pieza
-    const normalizar = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-
     function pintarLista() {
       const base = deCat(catActiva);
       const nombre = categorias.find(c => c.slug === catActiva)?.nombre;
@@ -319,10 +312,11 @@
         `<button type="button" data-estado="${id}" aria-pressed="${estadoActivo === id}">${etiqueta} · ${base.filter(f).length}</button>`).join("");
 
       const condicion = ESTADOS.find(e => e[0] === estadoActivo)[2];
+      // Busca sin importar mayúsculas ni tildes, en todos los datos de la pieza (también autores, marcas, etc.)
       const palabras = normalizar($("buscar").value).split(/\s+/).filter(Boolean);
       const visibles = base.filter(p => {
         if (!condicion(p)) return false;
-        const texto = normalizar(Object.values(p).filter(v => typeof v === "string").join(" ") + " " + p._cat.nombre);
+        const texto = textoDe(p);
         return palabras.every(w => texto.includes(w));
       });
       $("cantidad").textContent = visibles.length + (visibles.length === 1 ? " pieza" : " piezas");
@@ -335,7 +329,7 @@
       }
       $("lista").innerHTML = visibles.slice(0, limite).map(p => {
         const foto = archivosDe(p)[0];
-        const enlace = `c=${encodeURIComponent(p.collectionName)}&id=${encodeURIComponent(p.id)}`;
+        const enlace = `id=${encodeURIComponent(p.id)}`;
         const etiquetas = [
           !p.visible ? `<span class="etiqueta oculta">Oculta</span>` : "",
           p.destino !== DESTINO_VENTA ? `<span class="etiqueta">${esc(p.destino || "Sin Definir")}</span>` : "",
@@ -346,11 +340,11 @@
           ${foto ? `<img src="${esc(urlImagen(p, foto, "100x100"))}" alt="" loading="lazy">` : `<span class="sin-foto"></span>`}
           <div>
             <div class="titulo">${esc(p.titulo)}${etiquetas}</div>
-            <div class="datos">${esc(p.inventario || "")} · ${esc(p._cat.nombre)}</div>
+            <div class="datos">${[p.inventario, p._cat.nombre, p._colec?.nombre].filter(Boolean).map(esc).join(" · ")}</div>
           </div>
           <div class="precio">${esc(formatoPrecio(p))}</div>
           <div class="acciones">
-            ${enTienda(p) ? `<a class="ver" href="pieza.html?${enlace}" target="_blank">Ver</a>` : ""}
+            ${p.visible ? `<a class="ver" href="pieza.html?${enlace}" target="_blank">Ver</a>` : ""}
             <a class="boton chico secundario" href="cargar.html?${enlace}">Modificar</a>
             <button type="button" class="boton chico peligro" data-eliminar="${esc(p.id)}">Eliminar</button>
           </div>
@@ -392,7 +386,7 @@
       }
       b.disabled = true;
       try {
-        const r = await fetch(`${PB_URL}/api/collections/${encodeURIComponent(p.collectionName)}/records/${encodeURIComponent(p.id)}`, {
+        const r = await fetch(`${PB_URL}/api/collections/piezas/records/${encodeURIComponent(p.id)}`, {
           method: "DELETE", headers: { Authorization: sesion.token },
         });
         if (!r.ok) {

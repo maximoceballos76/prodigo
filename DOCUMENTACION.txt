@@ -1,8 +1,16 @@
 PRÓDIGO – DOCUMENTACIÓN DEL PROYECTO
-Última actualización: 2026-10-25 (versión de exhibición en GitHub Pages)
+Última actualización: 2026-10-30 (base única para tienda y museo)
 
 Tienda/catálogo web de piezas de un museo. La web es HTML + JavaScript sin
 frameworks ni compilación; los datos y las fotos viven en PocketBase.
+La misma base sirve a la tienda (piezas con destino "Venta") y al museo
+(todas las piezas visibles). Ver sección 4.
+
+  Versión de PocketBase: 0.40.6. Descargarla siempre desde la página de esa
+  versión (github.com/pocketbase/pocketbase/releases/tag/v0.40.6) y NO usar
+  "pocketbase update" (actualiza solo a la última). Para actualizar: leer las
+  notas de la versión nueva, hacer backup de pb_data, probar web + carga +
+  venta, y recién ahí cambiar este número.
 
 
 ==============================================================================
@@ -73,29 +81,43 @@ CÓMO FUNCIONA, PASO A PASO
        correctos" o un error de conexión.
 
   3) Vista CARGA (formulario de pieza nueva):
-     - Lo primero es "¿Qué tipo de pieza es?": Fotografía / Postal / Máquina
-       de escribir. El valor elegido ES el nombre de la colección de
-       PocketBase donde se guarda (fotografias / postales /
-       maquinas_de_escribir), y cambia los campos de "Más datos".
-     - Obligatorios: al menos una foto, título, N.º de inventario, medidas.
+     - Lo primero es "¿La pieza es para el museo o para la tienda?"
+       (obligatorio). Muestra solo lo que corresponde:
+         Museo:   sede (Museo Miranda / Museo Ezeiza) y archivo original
+                  (ruta del TIF). Los "Más datos" (catalogación) se abren
+                  solos.
+         Tienda:  precio y estado; las medidas pasan a ser obligatorias.
+       En la base se guarda en "destino": la sede, o "Venta" para la
+       tienda. cargar.html?para=museo o ?para=tienda abre el formulario
+       con esa opción elegida (son los dos botones del panel), y "Cargar
+       otra pieza" repite la de la última pieza guardada. Las piezas viejas
+       con destino "Sin Definir" abren sin opción elegida: hay que elegir
+       una para guardar.
+     - Después, "¿Qué tipo de pieza es?": una opción por cada categoría
+       visible de la base. Define la categoría de la pieza y qué campos
+       propios aparecen en "Más datos".
+     - Obligatorios: museo o tienda, al menos una foto, título y N.º de
+       inventario. Para la tienda, además, medidas y precio.
      - Fotos: JPG, PNG o WEBP; se eligen o se arrastran; la primera es la del
-       catálogo; se pueden quitar con la ×.
-     - Destino (radio): Venta / Museo Miranda / Museo Ezeiza / Sin Definir
-       ("Todavía no sé", marcado por defecto).
-     - Si el destino es "Venta" aparecen Precio (USD, obligatorio > 0; acepta
-       "1.500,50", "1500.50" o "1500") y Estado (Disponible / Reservada /
-       Vendida).
-     - Descripción, casilla "Mostrar en la web" (visible), y en "Más datos"
-       (un <fieldset class="grupo" data-tipo="..."> por tipo; solo se ve y se
-       envía el del tipo elegido, función mostrarGrupo()):
-         Fotografía:  fotógrafo, fecha, colección, soporte, proceso, inscripciones.
-         Postal:      editorial, fecha, lugar, técnica, color, circulada,
-                      inscripciones.
-         Máquina:     marca, modelo, fecha de fabricación, país de origen,
-                      N.º de serie, teclado, funcionamiento.
+       catálogo; se pueden quitar con la ×. Debajo de cada una se elige qué
+       muestra (Frente / Reverso / Tapa / Interior / Otros): se guarda en el
+       campo "caras" y la ficha lo usa como nombre de cada vista.
+     - Precio (solo tienda): USD, mayor a 0; acepta "1.500,50", "1500.50" o
+       "1500". Estado (solo tienda): Disponible / Reservada / Vendida.
+     - Descripción, casilla "Mostrar en la web" (visible), y en "Más datos":
+         Colección (lista, o "Otra (escribir)…" para crear una nueva), fecha,
+         inscripciones y los CAMPOS PROPIOS de la categoría, que se arman
+         solos con categorias.campos (función pintarPropios()):
+           - campo de un solo valor: lista desplegable + "Otro (escribir)…".
+           - campo de varios valores: casillas + un cuadro para escribir
+             otros, separados por ";".
+           - campo de texto: cuadro de texto libre.
+         Lo escrito como valor nuevo se crea en "terminos" al guardar, salvo
+         que ya exista (sin importar mayúsculas ni tildes). Las firmas de
+         estudio se listan según la colección elegida.
      - Antes de enviar, revisar() valida en el navegador y marca los errores
        al lado de cada campo.
-     - Se envía con POST /api/collections/<tipo>/records (FormData, con el
+     - Se envía con POST /api/collections/piezas/records (FormData, con el
        token en Authorization).
      - Errores del servidor: 401/403 = sesión vencida o sin permiso; errores
        por campo (ej. inventario repetido) se muestran en el campo; los
@@ -105,26 +127,25 @@ CÓMO FUNCIONA, PASO A PASO
      - "Cerrar sesión" borra la sesión guardada y vuelve al ingreso.
 
   4) Vista LISTO (confirmación):
-     - Muestra la primera foto y dice si la pieza ya aparece en la tienda
-       (solo si visible = sí Y destino = Venta), si quedó guardada pero no
-       está en la tienda, o si quedó oculta.
-     - "Ver en la web" (solo si está en la tienda) abre pieza.html de esa pieza.
+     - Muestra la primera foto y dice dónde quedó la pieza (la tienda o la
+       sede del museo) y si quedó oculta de la web.
+     - "Ver en la web" (si es visible) abre pieza.html de esa pieza.
      - "Cargar otra pieza" vuelve al formulario vacío.
 
 MODIFICAR Y ELIMINAR UNA PIEZA (mismo archivo, modo edición)
-  - Se entra con:   cargar.html?c=<colección>&id=<id de la pieza>
-      ej.: cargar.html?c=postales&id=kj3mx94kdo822g1
+  - Se entra con:   cargar.html?id=<id de la pieza>
+      ej.: cargar.html?id=kj3mx94kdo822g1
     (el id es el de PocketBase; es el mismo que aparece en el link de la
-    ficha: pieza.html?c=postales&id=kj3mx94kdo822g1). Pide el mismo login.
+    ficha: pieza.html?id=kj3mx94kdo822g1). Pide el mismo login.
     Lo normal es llegar desde el panel (admin.html), botón "Modificar".
   - El título cambia a "Modificar pieza" y el formulario se completa con los
-    datos y las fotos actuales (función cargarPieza()). El tipo de pieza no
-    se puede cambiar (cada tipo es una colección distinta).
-  - "Guardar cambios": PATCH /api/collections/<colección>/records/<id>.
+    datos y las fotos actuales (función cargarPieza()). El tipo de pieza se
+    puede cambiar (todas están en la misma colección "piezas").
+  - "Guardar cambios": PATCH /api/collections/piezas/records/<id>.
     Las fotos quitadas con la × se borran del servidor ("imagenes-") y las
     nuevas se agregan al final ("imagenes+"). Tiene que quedar al menos una.
   - "Eliminar pieza" (botón rojo, solo en modo edición): pide confirmación y
-    hace DELETE /api/collections/<colección>/records/<id>. Se borra la pieza
+    hace DELETE /api/collections/piezas/records/<id>. Se borra la pieza
     con todas sus fotos. NO SE PUEDE DESHACER (salvo desde un backup).
   - Si el id no existe (o la pieza ya se eliminó), avisa "No se encontró la
     pieza" con un link para cargar una nueva.
@@ -149,30 +170,32 @@ DESDE DÓNDE SE ENTRA
     ingresaste en una, la otra entra directo.
 
 QUÉ TIENE
-  - Botón "+ Cargar pieza nueva" (abre cargar.html).
-  - Totales generales arriba: piezas, en la tienda, reservadas y ocultas.
+  - Botones "+ Pieza de museo" y "+ Pieza para la tienda" (abren
+    cargar.html con esa opción ya elegida).
+  - Totales generales arriba: piezas, tienda, museo, reservadas y ocultas.
   - Lista de categorías a la izquierda (pensada para muchas): cada una con
     su cantidad y una barra según su tamaño; buscador de categorías y orden
     A–Z o por cantidad ("A–Z" / "Más piezas"). Al elegir una, el listado
     muestra solo esa categoría. En celular se abre con el botón
     "Cambiar ▾", como hoja desde abajo.
-  - Filtros rápidos por estado sobre el listado, con su cantidad: Todas,
-    En la tienda, Reservadas, Ocultas, Fuera de venta.
+  - Filtros rápidos sobre el listado, con su cantidad: Todas, Tienda
+    (destino Venta), Museo (Miranda o Ezeiza), Reservadas, Ocultas y Sin
+    destino (piezas viejas con "Sin Definir").
   - El listado muestra 40 piezas y un botón "Mostrar más".
   - LISTADO DE TODAS LAS PIEZAS (también las ocultas y las que no son de
     Venta), ordenado por N.º de inventario, con foto, título, inventario,
     categoría, precio y etiquetas (Oculta / destino si no es Venta /
     Reservada o Vendida).
-  - Buscador: busca en todos los datos de texto de la pieza (título,
-    inventario, descripción, marca, lugar, fotógrafo...), sin importar
-    mayúsculas ni tildes. Varias palabras = tienen que estar todas.
+  - Buscador: busca en todos los datos de la pieza (título, inventario,
+    descripción, colección, inscripciones, términos como autor, marca o
+    firma, y sus variantes), sin importar mayúsculas ni tildes. Varias
+    palabras = tienen que estar todas.
   - En cada pieza:
-      Ver        abre la ficha pública (solo si está en la tienda).
-      Modificar  abre cargar.html?c=<colección>&id=<id> (modo edición).
+      Ver        abre la ficha pública (si es visible).
+      Modificar  abre cargar.html?id=<id> (modo edición).
       Eliminar   pide confirmación y la borra con sus fotos, sin salir del
                  panel. NO SE PUEDE DESHACER (salvo desde un backup).
-  - Trae hasta 500 piezas por categoría (si alguna crece más, hay que
-    paginar; está marcado con "shortcut:" en el código).
+  - Trae todas las piezas, de a páginas de 500 (pbTodos en api.js).
 
 ==============================================================================
 3. ARCHIVOS Y QUÉ HACE CADA UNO
@@ -182,6 +205,21 @@ RAÍZ
   README.md            Descripción mínima del proyecto.
   CLAUDE.md            Instrucciones para Claude Code (uso de graphify).
   DOCUMENTACION.txt    Este archivo.
+  HOJA_DE_RUTA.txt     Lo que falta hacer, por etapas.
+  importar_catalogador.py  Importa las fotografías del catalogador de
+                       Francisco (repositorio público
+                       frankhode/prodigo-catalogador) a "piezas": fichas,
+                       vocabulario e imágenes (convertidas a JPG). Se puede
+                       correr de nuevo cuando haya fichas nuevas: saltea las
+                       ya importadas (por archivo_master). Necesita una cuenta
+                       de administrador de PocketBase en PB_EMAIL y
+                       PB_PASSWORD, y "pip install requests pillow".
+  exportar_demo.py     Genera tienda/datos/ para la demo (ver sección 6).
+  update-francisco/    El visor de colecciones fotográficas de Francisco
+                       (prodigo_colecciones_fotograficas) conectado a esta
+                       base: remote.js lee las fotografías del museo desde
+                       PocketBase. Para copiar a su repositorio; ver su
+                       LEEME.txt (antes de publicar, cambiar PB_URL).
   .graphifyignore      Carpetas que graphify no indexa (backups, pb_data,
                        pocketbase.exe, imgs).
   .claude/launch.json  Cómo levantar PocketBase (8090) y la web (5500).
@@ -196,6 +234,8 @@ RAÍZ
                          pb_data_20261025_004215_antes_piezas_ejemplo
                          pb_data_20261025_010810_antes_eliminar
                          pb_data_20261025_011910_antes_panel
+                         pb_data_20261030_002219_antes_piezas_unificadas
+                         pb_data_20261030_004446_antes_borrar_ejemplos
                        (cada una es de antes del cambio que dice su nombre).
 
 tienda/  (la web; es la carpeta que se sirve)
@@ -234,41 +274,59 @@ tienda/  (la web; es la carpeta que se sirve)
                  categorías con la cantidad de piezas de cada una y, debajo,
                  los filtros. En celular (menos de 820px) el lateral se
                  esconde y se abre como cajón con el botón "Filtrar".
-               - Arriba de la grilla: buscador (título, fecha, descripción y
-                 especificaciones; sin importar tildes ni mayúsculas) y orden
-                 (más recientes, precio, título A–Z).
-               - FILTROS POR ESPECIFICACIÓN: al elegir una categoría aparecen
-                 grupos de CASILLAS con sus especificaciones (constante
-                 FILTROS en tienda.html):
-                   Fotografías:  fotógrafo, colección, soporte, proceso.
-                   Postales:     color, lugar, editorial, circulación.
-                   Máquinas:     marca, país de origen, funcionamiento, teclado.
-                 Las opciones de cada grupo salen de los valores que tienen
-                 las piezas cargadas, con su cantidad (si ninguna pieza tiene
-                 el dato, el grupo no aparece). Dentro de un grupo se suman
-                 opciones ("o"); entre grupos se combinan ("y"). Los filtros
-                 activos se ven como chips sobre la grilla: tocar uno lo
-                 quita y "Quitar todo" los borra. Al cambiar de categoría se
-                 reinician. Para filtrar
-                 por otro campo: sumarlo a FILTROS en la categoría que
-                 corresponda. Conviene que sean campos de lista (select) o
-                 con valores escritos siempre igual: "Olivetti" y "olivetti"
-                 aparecen como dos opciones distintas.
-               - Pide las categorías visibles (listarCategorias) y, por cada
-                 una, sus piezas con destino "Venta" (listarPiezas, usando el
-                 slug de la categoría como nombre de colección).
-               - Cada pieza enlaza a pieza.html?c=<colección>&id=<id>.
+               - Arriba de la grilla: buscador (en todos los datos de la pieza,
+                 también autores, firmas, inscripciones y variantes de los
+                 términos; sin importar tildes ni mayúsculas) y orden (más
+                 recientes, precio, título A–Z, fecha más antigua / reciente;
+                 las piezas sin fecha van al final).
+               - VISTA (tamaño de las imágenes, como en el visor de colecciones
+                 fotográficas de Francisco): Miniaturas pequeñas (solo imagen,
+                 título y precio), medianas, grandes (la de siempre, por
+                 defecto) y Vista previa (imágenes de 1200 px). En celular son
+                 4, 3, 2 y 1 columnas. Se recuerda en el navegador de cada
+                 visitante (localStorage "prodigo-vista"). Estilos:
+                 .grilla[data-tamano] en style.css.
+               - FILTROS (los mismos factores de búsqueda que el visor de
+                 colecciones fotográficas de Francisco):
+                   Colección      siempre.
+                   Campos propios todos los de categorias.campos con
+                                  "filtro": true. En Fotografías: autor,
+                                  personas identificadas, personas, tipo de
+                                  imagen, tipo de retrato, encuadre,
+                                  orientación, color, ambiente, objetos,
+                                  destacados, firma del estudio, soporte y
+                                  proceso. En "Todas", los de todas las
+                                  categorías.
+                   Período        dos barras (desde / hasta), entre el año más
+                                  antiguo y el más reciente de la categoría.
+                                  Con el período activo quedan afuera las
+                                  piezas sin fecha.
+                 Cada opción muestra cuántas piezas quedarían si se la elige,
+                 teniendo en cuenta los demás filtros (las opciones con 0
+                 desaparecen). Dentro de un grupo se suman opciones ("o");
+                 entre grupos se combinan ("y"). Los grupos con 8 opciones o
+                 más tienen su propio buscador. Los filtros activos se ven
+                 como chips sobre la grilla: tocar uno lo quita y "Quitar
+                 todo" los borra. Al cambiar de categoría se reinician.
+                 PARA FILTRAR POR OTRO CAMPO: ponerle "filtro": true en
+                 categorias.campos (no hay que tocar código).
+               - Pide todo con cargarCatalogo({ soloVenta: true }): solo las
+                 piezas con destino "Venta".
+               - Cada pieza enlaza a pieza.html?id=<id>.
                - Si PocketBase no responde, muestra "No se pudo cargar el
                  catálogo".
 
-  pieza.html   FICHA DE UNA PIEZA. Se abre con pieza.html?c=<colección>&id=<id>.
+  pieza.html   FICHA DE UNA PIEZA. Se abre con pieza.html?id=<id>.
                - Trae la pieza (obtenerPieza) y muestra fotos con miniaturas
-                 para cambiar de vista, título, precio, estado, descripción y
-                 los datos de catalogación que estén completos (lista CAMPOS:
-                 los de fotografías, postales y máquinas de escribir; solo
-                 aparecen los que la pieza tiene cargados).
-               - Botón "Consultar por esta pieza" = mailto a
-                 contacto@ejemplo.com (dirección de ejemplo, falta la real).
+                 para cambiar de vista (con el nombre de cada cara: Frente,
+                 Reverso...), título, descripción y los datos de
+                 catalogación que estén completos: categoría, colección,
+                 fecha, medidas, los campos propios de su categoría (en el
+                 orden de categorias.campos) e inscripciones.
+               - Solo si la pieza está en venta: precio, estado y botón
+                 "Consultar por esta pieza" = mailto a contacto@ejemplo.com
+                 (dirección de ejemplo, falta la real). Las piezas del museo
+                 se ven sin precio ni botón.
                - Si la pieza no existe o está oculta: "No encontramos esa pieza".
 
   cargar.html  FORMULARIO INTERNO DE CARGA DE PIEZAS. Ver sección 2.
@@ -282,14 +340,22 @@ tienda/  (la web; es la carpeta que se sirve)
                  recordarSesion(s)        guarda (o borra, con null) la sesión
                                           en localStorage "prodigo-sesion".
 
-  api.js       Funciones compartidas por las tres páginas:
+  api.js       Funciones compartidas por todas las páginas:
                  PB_URL           dirección de PocketBase.
                  DESTINO_VENTA    texto exacto de la opción "Venta".
-                 pb(ruta)         GET a PocketBase; error si no responde bien.
-                 listarCategorias()  categorías visibles, por "orden".
-                 listarPiezas(col)   piezas con destino Venta, más nuevas primero.
-                 obtenerPieza(col, id)  una pieza.
+                 pbTodos(col, filtro, token)  todos los registros (de a 500).
+                 cargarCatalogo({ soloVenta, token })  categorías, colecciones,
+                                  términos y piezas; cada pieza trae _cat,
+                                  _colec y _terminos ya relacionados.
+                 obtenerPieza(id, token)  una pieza, con sus relaciones.
+                 camposDe(cat)    campos propios de una categoría.
+                 valoresCampo(p, campo)  valores de un campo propio (lista).
+                 nombreTermino(t) nombre visible (firmas: "BIX-03 · ...").
+                 periodoDe(p)     [año desde, año hasta] o null.
+                 textoDe(p)       todo el texto buscable de una pieza.
+                 normalizar(s)    minúsculas y sin tildes, para buscar.
                  archivosDe(p)    lista de fotos de una pieza.
+                 caraDe(p, i)     qué muestra la foto i (Frente, Reverso...).
                  urlImagen(p, archivo, miniatura)  URL de la foto (o miniatura
                                   400x0 / 1200x0 / 100x100).
                  formatoPrecio(p) "USD 1.500".
@@ -300,15 +366,7 @@ tienda/  (la web; es la carpeta que se sirve)
                ficha y versión móvil.
                cargar.html suma estilos propios dentro del archivo.
 
-  piezas.js    DATOS DE EJEMPLO VIEJOS (6 piezas falsas). Ya NO lo usa
-               ninguna página (los datos vienen de PocketBase). Se puede borrar.
-
-  imgs/        Copia local de la foto de cada pieza, con su N.º de inventario
-               como nombre (FOT-0001.jpg, POS-0005.jpg, MAQ-0003.jpg...).
-               También quedan los archivos originales con su nombre viejo
-               (lvm1.webp, chascomus.webp, maquinadeescribir1-3.webp, etc.).
-               Ninguna página las usa directo: ya están subidas a PocketBase.
-               EXCEPCIÓN: portada.webp es el fondo de la portada (index.html).
+  imgs/        Solo portada.webp: el fondo de la portada (index.html).
                Es "Chascomus-antiguo 1875.jpg" de Wikimedia Commons, dominio
                público: https://commons.wikimedia.org/wiki/File:Chascomus-antiguo_1875.jpg
 
@@ -317,13 +375,17 @@ tienda/pocketbase/  (servidor y base de datos)
   pb_data/         La base de datos y las fotos subidas. NO se edita a mano;
                    hacer copia en backups/ antes de cambios grandes.
 
-  pb_hooks/  (reglas que corren en el servidor; aplican a las colecciones de
-             piezas: fotografias, postales y maquinas_de_escribir. Si se agrega
-             otra categoría hay que sumarla al final de cada hook.)
-    validar_venta.pb.js  Al crear o editar una pieza llama a venta.js.
+  pb_hooks/  (reglas que corren en el servidor, sobre la colección "piezas")
+    validar_venta.pb.js  Al crear o editar una pieza llama a venta.js y fecha.js.
     venta.js             - Sin destino => "Sin Definir".
                          - Destino "Venta" => exige precio_usd > 0 (si no,
                            rechaza con mensaje) y, sin estado, pone "Disponible".
+                           PROVISORIO: la exigencia de precio está comentada
+                           mientras las fotos del catalogador estén en la
+                           tienda (ver sección 5).
+    fecha.js             Calcula anio_desde / anio_hasta a partir del texto de
+                         la fecha: "1895" -> 1895-1895, "c. 1900" -> 1900,
+                         "1915-1920" -> 1915-1920, sin año -> vacío.
     ocultar_inventario.pb.js  El N.º de inventario es interno: no se devuelve
                          a la web pública, solo a administradores y editores.
 
@@ -358,6 +420,15 @@ tienda/pocketbase/  (servidor y base de datos)
     1792960000_editores_listan_ocultas.js  Los editores pueden LISTAR las
                                       piezas ocultas (para el panel). El
                                       público sigue viendo solo las visibles.
+    1793000000_piezas_unificadas.js   BASE ÚNICA: crea "colecciones",
+                                      "terminos" y "piezas", agrega
+                                      categorias.campos, mueve las piezas de
+                                      las tres colecciones viejas (mismo id y
+                                      fotos) y las BORRA. No se deshace: para
+                                      volver atrás, restaurar el backup
+                                      pb_data_20261030_002219_antes_piezas_unificadas.
+                                      (Las migraciones anteriores crean las
+                                      colecciones viejas; quedan como historia.)
 
   Las migraciones nuevas se aplican al reiniciar PocketBase.
 
@@ -366,59 +437,101 @@ tienda/pocketbase/  (servidor y base de datos)
 4. DATOS EN POCKETBASE
 ==============================================================================
 
-  categorias   nombre, slug, descripcion, orden, visible. El slug ES el
-               nombre de la colección de piezas que muestra la categoría.
+  UNA SOLA BASE PARA LA TIENDA Y EL MUSEO. Todas las piezas están en la
+  colección "piezas"; la tienda muestra las de destino "Venta".
+
+  categorias   nombre, slug, descripcion, orden, visible y CAMPOS: la lista
+               de campos propios de la categoría (los usan la carga, la
+               ficha y los filtros). Cada campo es:
+                 { "clave": "encuadre", "etiqueta": "Encuadre",
+                   "tipo": "termino" | "texto",
+                   "multiple": true   (se puede elegir más de un término),
+                   "filtro": true     (aparece como filtro en la tienda),
+                   "porColeccion": true (cada colección tiene su propia
+                                       lista; se usa para las firmas),
+                   "ayuda": "texto de ayuda para la carga" }
                Hoy: Fotografías (1), Postales (2), Máquinas de escribir (3).
+               Los campos de cada una están en 1793000000_piezas_unificadas.js.
 
-  CÓMO AGREGAR UNA CATEGORÍA: crear su colección de piezas (con los campos
-  comunes), su registro en categorias, sumarla a los dos hooks, a las
-  opciones de "tipo" en cargar.html y sus campos propios a CAMPOS en
-  pieza.html. Ver 1792920000_postales_maquinas.js como ejemplo.
+  colecciones  nombre, slug, descripcion. Fondo o colección de origen
+               (F. Bixio y Cia., Bixio y Castiglioni, Fondo Bixio...).
 
-  Campos comunes a todas las colecciones de piezas:
-               imagenes, titulo*, inventario* (único dentro de la colección),
-               destino, precio_usd, estado, visible, descripcion, medidas*.
-               (* obligatorio)
-  fotografias  + fotografo, fecha, coleccion, soporte, proceso,
-               inscripciones, archivo_master.
-  postales     + editorial, fecha, lugar, tecnica, color (Blanco y negro /
-               Un solo tono (sepia, azul) / Color / Coloreada a mano),
-               circulada (Circulada / Sin circular), inscripciones.
-  maquinas_de_escribir
-               + marca, modelo, fecha, origen, numero_serie, teclado,
-               funcionamiento (Funciona / Funciona con fallas / No funciona /
-               Sin probar).
+  terminos     VOCABULARIO CONTROLADO: cada valor se escribe una sola vez y
+               las piezas lo eligen de la lista (así "E. Bixio" y "Bixio, E."
+               no quedan como dos autores distintos).
+                 tipo       la "clave" del campo (autor, encuadre, marca...).
+                 nombre     como se muestra.
+                 codigo     opcional (firmas de estudio: BIX-03).
+                 coleccion  solo para listas propias de una colección (firmas).
+                 variantes  otras formas de escribirlo, separadas por coma;
+                            el buscador también las encuentra.
+               Único por tipo + nombre + coleccion.
+
+  piezas       imagenes, caras (qué muestra cada foto, mismo orden),
+               titulo*, inventario* (ÚNICO EN TODO EL MUSEO), categoria*,
+               coleccion, destino, precio_usd, estado, visible, descripcion,
+               fecha (texto, como se muestra), anio_desde / anio_hasta (los
+               calcula el hook fecha.js), medidas, inscripciones,
+               terminos (los valores de los campos propios de tipo
+               "termino"), ficha (los de tipo "texto", ej.
+               {"modelo": "Lettera 22"}), archivo_master (ruta del TIF en el
+               disco de archivo), fuente (interno, oculto).
+               (* obligatorio. Medidas es obligatorio en cargar.html pero no
+               en la base: las fotos importadas no lo tienen.)
   editores     email, contraseña, nombre (cuentas para cargar.html).
 
+  CÓMO AGREGAR UNA CATEGORÍA (sin tocar código): crear su registro en
+  categorias (panel de PocketBase) con visible = sí y su lista de campos.
+  Aparece sola en la tienda, la carga, la ficha y el panel.
+  CÓMO AGREGAR UN CAMPO A UNA CATEGORÍA: sumarlo a su lista de campos.
+  CÓMO CORREGIR UN VALOR MAL ESCRITO: editarlo en "terminos": cambia en
+  todas las piezas que lo usan. Para unir dos que son el mismo, pasar las
+  piezas al bueno y borrar el otro (solo administradores).
+
   Qué ve la web pública: categorías con visible = true; piezas con
-  visible = true (y en el catálogo, solo las de destino "Venta").
+  visible = true (y en la tienda, solo las de destino "Venta");
+  colecciones y términos, todos. El N.º de inventario y "fuente" no se
+  devuelven al público.
 
 
 ==============================================================================
-5. NUMERACIÓN DE PIEZAS Y PIEZAS DE EJEMPLO
+5. PIEZAS CARGADAS
 ==============================================================================
 
-  N.º DE INVENTARIO: prefijo por categoría + 4 cifras.
-      FOT-0001...  fotografías
-      POS-0001...  postales
-      MAQ-0001...  máquinas de escribir
-  La foto de cada pieza se nombra igual que su inventario (FOT-0003.jpg).
-  PocketBase guarda el archivo en minúsculas, con "_" y un sufijo al azar
-  (fot_0003_ifm4dip7ox.jpg); es su forma de evitar nombres repetidos.
+  Desde el 2026-10-30 la base tiene SOLO PIEZAS REALES. Las 26 piezas de
+  ejemplo del prototipo (FOT/POS/MAQ, con datos inventados e imágenes de
+  Wikimedia Commons) se borraron junto con sus términos y colecciones
+  inventados; quedan en el backup pb_data_20261030_004446_antes_borrar_ejemplos.
+  Se conservaron las opciones genéricas de "Funcionamiento" (máquinas) y
+  "Circulación" (postales).
 
-  PIEZAS DE EJEMPLO DEL PROTOTIPO (cargadas el 2026-10-25):
-  FOT-0003 a 0008, POS-0005 a 0010 y MAQ-0003 a 0008. Las imágenes son de
-  Wikimedia Commons (dominio público o licencias libres). Las fechas,
-  lugares, técnicas, marcas y modelos corresponden a lo que muestra cada
-  imagen; los fotógrafos, colecciones ("Fondo Bixio", "Colección Arrieta",
-  "Archivo Ferrari Lagos"), editoriales ("Casa Moretti Hnos.", "Ediciones
-  Del Plata", "Ediciones Larrañaga"), números de serie, estado de
-  funcionamiento y precios son INVENTADOS para el prototipo.
-  El origen real de cada imagen (archivo, autor, licencia y link) está en el
-  campo interno "fuente" de cada pieza (panel de PocketBase).
-  Antes de publicar el sitio: reemplazarlas por piezas reales o borrarlas.
-  Las que tienen licencia CC BY / CC BY-SA (MAQ-0006, MAQ-0007, MAQ-0008)
-  exigen citar al autor si se publican.
+  N.º DE INVENTARIO: único en todo el museo. Falta definir la numeración
+  real (ver HOJA_DE_RUTA.txt). PocketBase guarda cada foto con su nombre en
+  minúsculas, "_" y un sufijo al azar; es su forma de evitar nombres repetidos.
+
+  FOTOGRAFÍAS IMPORTADAS DEL CATALOGADOR (2026-10-30, importar_catalogador.py):
+  219 piezas: 136 de "F. Bixio y Cia." y 83 de "Bixio y Castiglioni".
+  - Cada pieza es un grupo de imágenes del catalogador con UN frente (más
+    sus reversos, tapas, etc., en "caras"). Las 35 imágenes sin frente
+    quedaron afuera, igual que en el visor de Francisco.
+  - inventario = carpeta/archivo del TIF sin extensión (bixio/img024);
+    archivo_master = la ruta del TIF (bixio/img024.tif). Si el museo usa
+    otra numeración, hay que renumerarlas.
+  - titulo: armado con los datos ("Retrato individual, 1918"); conviene
+    reemplazarlo por uno descriptivo.
+  - destino "Museo Miranda" (todas las del catalogador van a esa sede;
+    constante DESTINO en importar_catalogador.py) y visible = sí.
+  - PROVISORIO desde 2026-10-30: para que la tienda no se vea vacía, las
+    219 están en "Venta" sin precio (se muestra "Consultar precio") y el
+    hook venta.js acepta Venta sin precio (cargar.html lo sigue pidiendo).
+    Se revierte al cargar los artículos reales de la tienda: ver
+    HOJA_DE_RUTA.txt, Etapa 1. Las fichas nuevas que se importen entran
+    igual a Museo Miranda.
+  - notes de cada imagen -> inscripciones (con la cara adelante:
+    "Reverso: ..."). number -> ficha.numero_original. Firmas: de todas las
+    caras (el sello suele estar en el reverso). Color: byn -> "Blanco y
+    negro", sepia -> "Sepia", iluminado -> "Coloreada a mano" (los mismos
+    nombres que en postales).
 
 
 ==============================================================================
@@ -437,20 +550,19 @@ tienda/pocketbase/  (servidor y base de datos)
       la confirmación y aclaran que es una demostración).
       Direcciones: .../prodigo/admin.html y .../prodigo/cargar.html
     - El N.º de inventario no viene en tienda/datos/ (la API pública lo
-      oculta): en la demo se deduce del nombre de la primera foto
-      (fot_0003_x.jpg -> FOT-0003), en api.js > demo().
+      oculta): en el panel de la demo no se ve.
+    - La demo solo tiene las piezas en venta, con las fotos reducidas
+      (lado mayor 1200 px, JPG calidad 82): hoy las 219 fotografías
+      provisorias, unos 38 MB.
 
   CÓMO FUNCIONA
   - tienda/api.js detecta si la página corre en *.github.io (MODO_DEMO) y en
-    ese caso lee tienda/datos/*.json en vez de llamar a PocketBase; las
+    ese caso lee tienda/datos/*.json (categorias, colecciones, terminos,
+    piezas) en vez de llamar a PocketBase; las
     fotos salen de tienda/datos/fotos/<id de la pieza>/.
   - tienda/datos/ lo genera exportar_demo.py (en la raíz del proyecto) a
     partir de la API PÚBLICA de PocketBase: solo piezas visibles, sin N.º de
     inventario ni campo fuente.
-  - Las 3 fotos con licencia Creative Commons (Royal 10, Underwood No. 5,
-    Remington portátil) muestran el crédito del autor en la ficha (campo
-    "credito", lista CREDITOS en exportar_demo.py). Es obligatorio por la
-    licencia al publicarlas.
   - .github/workflows/pages.yml publica la carpeta tienda/ (sin
     tienda/pocketbase/) en GitHub Pages en cada push a main.
   - .gitignore impide subir la base de datos (pb_data), los backups y

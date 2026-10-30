@@ -238,7 +238,7 @@ body {
 .lista-cats button:hover { background: var(--superficie); }
 .lista-cats button[aria-pressed="true"] { border-left-color: var(--acento); background: var(--superficie); color: var(--acento); }
 
-/* Filtros por especificación (solo dentro de una categoría): casillas combinables */
+/* Filtros (colección, período y los propios de cada categoría): casillas combinables */
 .grupo { border-top: 1px solid var(--linea); }
 .grupo summary {
   list-style: none;
@@ -257,6 +257,16 @@ body {
 .grupo label { display: flex; gap: 0.6rem; align-items: center; font-size: 0.9rem; cursor: pointer; }
 .grupo label small { margin-left: auto; color: var(--tinta-suave); }
 .grupo input { accent-color: var(--acento); width: 1rem; height: 1rem; flex: none; }
+.grupo summary small { margin-left: auto; margin-right: 0.6rem; font-weight: 400; color: var(--tinta-suave); }
+.grupo .opciones.largas { max-height: 16rem; overflow-y: auto; }
+.grupo input.buscar-opcion {
+  width: 100%; height: auto; margin-bottom: 0.6rem; padding: 0.35rem 0.6rem;
+  font: inherit; font-size: 0.85rem; color: var(--tinta);
+  border: 1px solid var(--linea); border-radius: 6px; background: var(--superficie);
+}
+.periodo { padding-bottom: 1rem; display: grid; gap: 0.5rem; font-size: 0.9rem; }
+.periodo strong { font-family: "Instrument Sans", system-ui, sans-serif; }
+.periodo input[type=range] { width: 100%; height: auto; }
 .sin-filtros { font-size: 0.85rem; color: var(--tinta-suave); border-top: 1px solid var(--linea); padding-top: 1rem; }
 
 .barra-lista { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1rem; }
@@ -395,6 +405,23 @@ body {
 }
 .pieza .estado.reservada { background: transparent; color: var(--tinta-suave); border: 1px solid var(--linea); }
 
+/* Tamaño de la vista (selector "Vista" de la tienda): 0 miniaturas pequeñas, 1 medianas,
+   2 grandes (las reglas de .grilla de arriba, por defecto), 3 vista previa */
+.grilla[data-tamano="0"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 110px), 1fr)); gap: 1rem 0.75rem; }
+.grilla[data-tamano="1"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 1.5rem 1rem; }
+.grilla[data-tamano="3"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 2.5rem 2rem; }
+.grilla[data-tamano="0"] .placa { font-size: 1.5rem; }
+.grilla[data-tamano="0"] .pieza h3 { font-size: 0.85rem; margin-top: 0.4rem; }
+.grilla[data-tamano="0"] .pieza .precio { font-size: 0.8rem; }
+.grilla[data-tamano="0"] .pieza .detalle, .grilla[data-tamano="0"] .pieza .estado { display: none; }
+.grilla[data-tamano="1"] .pieza h3 { font-size: 1rem; }
+.grilla[data-tamano="3"] .pieza h3 { font-size: 1.35rem; }
+@media (max-width: 560px) {
+  .grilla[data-tamano="0"] { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem 0.5rem; }
+  .grilla[data-tamano="1"] { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem 0.6rem; }
+  .grilla[data-tamano="3"] { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
+}
+
 /* Móvil: las secciones bajan a su propia fila, debajo de la marca */
 @media (max-width: 600px) {
   .cabecera { flex-wrap: wrap; row-gap: 0.5rem; }
@@ -428,7 +455,6 @@ body {
   color: var(--tinta-suave);
 }
 .miniatura .placa { display: grid; font-size: 1.25rem; }
-.credito { font-size: 0.75rem; color: var(--tinta-suave); margin-top: 0.5rem; }
 .miniatura[aria-pressed="true"] .placa { outline: 2px solid var(--acento); outline-offset: 2px; }
 .miniatura:focus-visible .placa { outline: 2px solid var(--acento); outline-offset: 2px; }
 

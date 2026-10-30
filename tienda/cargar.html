@@ -21,7 +21,7 @@
     .campo > label, .campo > legend { display: block; font-weight: 600; margin-bottom: 0.35rem; }
     .campo .ayuda { display: block; font-size: 0.85rem; color: var(--tinta-suave); margin: -0.2rem 0 0.4rem; }
     .obligatorio { color: var(--acento); font-weight: 400; font-size: 0.85rem; }
-    fieldset.campo, fieldset.grupo { border: 0; padding: 0; margin: 0; min-width: 0; }
+    fieldset.campo { border: 0; padding: 0; margin: 0 0 1.5rem; min-width: 0; }
 
     .carga input[type=text], .carga input[type=email], .carga input[type=password], .carga textarea, .carga select {
       width: 100%; font: inherit; color: var(--tinta); background: var(--superficie);
@@ -31,6 +31,7 @@
     .carga input:focus, .carga textarea:focus, .carga select:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
     .campo.con-error input, .campo.con-error textarea, .campo.con-error .zona { border-color: #a3322b; }
     .error { color: #a3322b; font-size: 0.9rem; margin-top: 0.35rem; }
+    .campo [data-nuevo], #coleccion-nueva { margin-top: 0.5rem; }
 
     .opciones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
     .opciones label {
@@ -55,6 +56,7 @@
     .foto { position: relative; }
     .foto img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; display: block; background: var(--placa); }
     .foto small { display: block; font-size: 0.75rem; color: var(--tinta-suave); margin-top: 0.2rem; }
+    .carga .foto select { padding: 0.25rem 0.35rem; font-size: 0.8rem; margin-top: 0.25rem; }
     .foto button {
       position: absolute; top: 0.3rem; right: 0.3rem; width: 1.8rem; height: 1.8rem; border-radius: 50%;
       border: 0; background: rgba(0,0,0,.65); color: #fff; font-size: 1.1rem; line-height: 1; cursor: pointer;
@@ -112,22 +114,27 @@
     <section id="vista-carga" hidden>
       <div class="sesion"><span id="quien"></span><span><a href="admin.html">Panel</a> · <button type="button" id="salir">Cerrar sesión</button></span></div>
       <h1 id="titulo-carga">Cargar una pieza nueva</h1>
-      <p class="intro">Completá lo que sepas. Solo la foto, el título, el número de inventario y las medidas son obligatorios.</p>
+      <p class="intro">Completá lo que sepas. Son obligatorios: si va al museo o a la tienda, la foto, el título y el número de inventario. Para la tienda, también las medidas y el precio.</p>
       <div class="aviso" id="error-general" role="alert" hidden></div>
 
       <form id="form-pieza" novalidate>
+        <fieldset class="campo" data-campo="ambito">
+          <legend>¿La pieza es para el museo o para la tienda? <span class="obligatorio">obligatorio</span></legend>
+          <div class="opciones">
+            <label><input type="radio" name="ambito" value="museo"> Museo</label>
+            <label><input type="radio" name="ambito" value="tienda"> Tienda</label>
+          </div>
+        </fieldset>
+
         <fieldset class="campo">
           <legend>¿Qué tipo de pieza es?</legend>
-          <div class="opciones">
-            <label><input type="radio" name="tipo" value="fotografias" checked> Fotografía</label>
-            <label><input type="radio" name="tipo" value="postales"> Postal</label>
-            <label><input type="radio" name="tipo" value="maquinas_de_escribir"> Máquina de escribir</label>
-          </div>
+          <!-- Una opción por categoría (se arma con las categorías de la base) -->
+          <div class="opciones" id="tipos"></div>
         </fieldset>
 
         <div class="campo" data-campo="imagenes">
           <label>Fotos <span class="obligatorio">obligatorio</span></label>
-          <span class="ayuda">La primera foto es la que se ve en el catálogo.</span>
+          <span class="ayuda">La primera foto es la que se ve en el catálogo. Debajo de cada una podés indicar qué muestra.</span>
           <label class="zona" id="zona">
             <input type="file" id="archivos" accept="image/jpeg,image/png,image/webp" multiple>
             <strong>Elegir fotos</strong>
@@ -144,26 +151,33 @@
 
         <div class="campo" data-campo="inventario">
           <label for="inventario">N.º de inventario <span class="obligatorio">obligatorio</span></label>
-          <span class="ayuda">Distinto para cada pieza. Ej: img-446</span>
+          <span class="ayuda">Distinto para cada pieza de todo el museo. Ej: img-446</span>
           <input type="text" id="inventario" name="inventario" autocomplete="off">
         </div>
 
         <div class="campo" data-campo="medidas">
-          <label for="medidas">Medidas <span class="obligatorio">obligatorio</span></label>
-          <span class="ayuda">Alto x ancho en cm. Ej: 18 x 24 cm</span>
+          <label for="medidas">Medidas <span class="obligatorio" id="medidas-obligatorio" hidden>obligatorio para la tienda</span></label>
+          <span class="ayuda">Alto x ancho (x profundidad) en cm. Ej: 18 x 24 cm</span>
           <input type="text" id="medidas" name="medidas">
         </div>
 
-        <fieldset class="campo" data-campo="destino">
-          <legend>¿A dónde va la pieza?</legend>
-          <div class="opciones">
-            <label><input type="radio" name="destino" value="Venta"> Venta</label>
-            <label><input type="radio" name="destino" value="Museo Miranda"> Museo Miranda</label>
-            <label><input type="radio" name="destino" value="Museo Ezeiza"> Museo Ezeiza</label>
-            <label><input type="radio" name="destino" value="Sin Definir" checked> Todavía no sé</label>
+        <!-- Solo museo -->
+        <div id="bloque-museo" hidden>
+          <fieldset class="campo" data-campo="destino">
+            <legend>Sede</legend>
+            <div class="opciones">
+              <label><input type="radio" name="sede" value="Museo Miranda" checked> Museo Miranda</label>
+              <label><input type="radio" name="sede" value="Museo Ezeiza"> Museo Ezeiza</label>
+            </div>
+          </fieldset>
+          <div class="campo" data-campo="archivo_master">
+            <label for="archivo_master">Archivo original (TIF)</label>
+            <span class="ayuda">Ruta del escaneo en el disco de archivo. Ej: bixio/img024.tif</span>
+            <input type="text" id="archivo_master" name="archivo_master" autocomplete="off">
           </div>
-        </fieldset>
+        </div>
 
+        <!-- Solo tienda -->
         <div id="bloque-venta" hidden>
           <div class="campo" data-campo="precio_usd">
             <label for="precio">Precio <span class="obligatorio">obligatorio para la venta</span></label>
@@ -193,71 +207,19 @@
 
         <details class="mas">
           <summary>Más datos de la pieza <small>(opcional)</small></summary>
-          <!-- Un grupo por tipo de pieza; solo se envía el del tipo elegido -->
-          <fieldset class="grupo" data-tipo="fotografias">
           <div class="dos">
-            <div class="campo" data-campo="fotografo"><label for="fotografo">Fotógrafo</label>
-              <select id="fotografo" name="fotografo">
-                <option value="">Sin indicar</option>
-                <option>Bixio Fundador</option>
-                <option>E. Bixio</option>
-                <option>Se desconoce</option>
-                <option>Otros</option>
-              </select>
+            <div class="campo" data-campo="coleccion"><label for="coleccion">Colección</label>
+              <select id="coleccion"></select>
+              <input type="text" id="coleccion-nueva" placeholder="Nombre de la colección nueva" aria-label="Nombre de la colección nueva" hidden>
             </div>
-            <div class="campo" data-campo="fecha"><label for="fecha">Fecha</label><input type="text" id="fecha" name="fecha" placeholder="Ej: 1895 o c. 1900"></div>
-            <div class="campo" data-campo="coleccion"><label for="coleccion">Colección</label><input type="text" id="coleccion" name="coleccion" placeholder="Ej: Bixio Fundador"></div>
-            <div class="campo" data-campo="soporte"><label for="soporte">Soporte</label><input type="text" id="soporte" name="soporte" placeholder="Ej: positivo en papel"></div>
-            <div class="campo" data-campo="proceso"><label for="proceso">Proceso</label><input type="text" id="proceso" name="proceso" placeholder="Ej: original"></div>
+            <div class="campo" data-campo="fecha"><label for="fecha">Fecha</label><input type="text" id="fecha" name="fecha" placeholder="Ej: 1895, c. 1900, 1915-1920"></div>
           </div>
-          <div class="campo" data-campo="inscripciones"><label for="inscripciones">Inscripciones</label><input type="text" id="inscripciones" name="inscripciones" placeholder="Sellos, dedicatorias, textos escritos"></div>
-          </fieldset>
-
-          <fieldset class="grupo" data-tipo="postales" disabled hidden>
-          <div class="dos">
-            <div class="campo" data-campo="editorial"><label for="editorial">Editorial</label><input type="text" id="editorial" name="editorial" placeholder="Ej: Peuser"></div>
-            <div class="campo" data-campo="fecha"><label for="fecha-postal">Fecha</label><input type="text" id="fecha-postal" name="fecha" placeholder="Ej: 1905 o c. 1910"></div>
-            <div class="campo" data-campo="lugar"><label for="lugar">Lugar</label><input type="text" id="lugar" name="lugar" placeholder="Ej: Plaza de Mayo, Buenos Aires"></div>
-            <div class="campo" data-campo="tecnica"><label for="tecnica">Técnica</label><input type="text" id="tecnica" name="tecnica" placeholder="Ej: fototipia, litografía"></div>
-            <div class="campo" data-campo="color"><label for="color">Color</label>
-              <select id="color" name="color">
-                <option value="">Sin indicar</option>
-                <option>Blanco y negro</option>
-                <option>Un solo tono (sepia, azul)</option>
-                <option>Color</option>
-                <option>Coloreada a mano</option>
-              </select>
-            </div>
-            <div class="campo" data-campo="circulada"><label for="circulada">¿Circuló por correo?</label>
-              <select id="circulada" name="circulada">
-                <option value="">Sin indicar</option>
-                <option>Circulada</option>
-                <option>Sin circular</option>
-              </select>
-            </div>
+          <div class="campo" data-campo="inscripciones"><label for="inscripciones">Inscripciones</label>
+            <span class="ayuda">Sellos, dedicatorias, matasellos o textos escritos en la pieza.</span>
+            <textarea id="inscripciones" name="inscripciones" style="min-height:4rem"></textarea>
           </div>
-          <div class="campo" data-campo="inscripciones"><label for="inscripciones-postal">Inscripciones</label><input type="text" id="inscripciones-postal" name="inscripciones" placeholder="Texto manuscrito, sellos, matasellos"></div>
-          </fieldset>
-
-          <fieldset class="grupo" data-tipo="maquinas_de_escribir" disabled hidden>
-          <div class="dos">
-            <div class="campo" data-campo="marca"><label for="marca">Marca</label><input type="text" id="marca" name="marca" placeholder="Ej: Olivetti, Remington"></div>
-            <div class="campo" data-campo="modelo"><label for="modelo">Modelo</label><input type="text" id="modelo" name="modelo" placeholder="Ej: Lettera 32"></div>
-            <div class="campo" data-campo="fecha"><label for="fecha-maquina">Fecha de fabricación</label><input type="text" id="fecha-maquina" name="fecha" placeholder="Ej: 1963 o c. 1920"></div>
-            <div class="campo" data-campo="origen"><label for="origen">País de origen</label><input type="text" id="origen" name="origen" placeholder="Ej: Italia"></div>
-            <div class="campo" data-campo="numero_serie"><label for="numero_serie">N.º de serie</label><input type="text" id="numero_serie" name="numero_serie"></div>
-            <div class="campo" data-campo="teclado"><label for="teclado">Teclado</label><input type="text" id="teclado" name="teclado" placeholder="Ej: QWERTY, español"></div>
-          </div>
-          <div class="campo" data-campo="funcionamiento"><label for="funcionamiento">Funcionamiento</label>
-            <select id="funcionamiento" name="funcionamiento">
-              <option value="">Sin indicar</option>
-              <option>Funciona</option>
-              <option>Funciona con fallas</option>
-              <option>No funciona</option>
-              <option>Sin probar</option>
-            </select>
-          </div>
-          </fieldset>
+          <!-- Campos propios de la categoría elegida (se arman con categorias.campos) -->
+          <div id="campos-propios"></div>
         </details>
 
         <div class="botones">
@@ -285,13 +247,24 @@
   <script>
     const $ = id => document.getElementById(id);
     let sesion = null;   // { token, nombre, coleccion }
-    let fotos = [];      // en orden: { archivo, vista } si es nueva, { guardada, vista } si ya estaba en el servidor
+    let fotos = [];      // en orden: { archivo, vista, cara } si es nueva, { guardada, vista, cara } si ya estaba en el servidor
     let quitadas = [];   // nombres de fotos ya guardadas que se quitaron (solo al modificar)
     let sinGuardar = false;
+    let categorias = [], colecciones = [], terminos = [];   // listas de la base para armar el formulario
 
-    // Modificar / eliminar: cargar.html?c=<colección>&id=<id> abre esa pieza en el formulario
+    const CARAS = ["Frente", "Reverso", "Tapa", "Interior", "Otros"];
+    const NUEVO = "__nuevo";   // opción "Otro (escribir)…" de las listas
+    const SEPARADOR = ";";     // para escribir varios valores nuevos en un campo de elección múltiple
+    const porNombre = (a, b) => a.nombre.localeCompare(b.nombre, "es", { numeric: true });
+    const slugDe = s => normalizar(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+    // Modificar / eliminar: cargar.html?id=<id> abre esa pieza en el formulario
     const params = new URLSearchParams(location.search);
-    let edicion = params.get("id") ? { coleccion: params.get("c") || "", id: params.get("id"), titulo: "" } : null;
+    let edicion = params.get("id") ? { id: params.get("id"), titulo: "" } : null;
+    // Pieza nueva: cargar.html?para=museo|tienda la abre con esa opción elegida;
+    // "Cargar otra pieza" repite la de la última pieza guardada
+    let ambitoPreferido = params.get("para") || "";
+    const SEDES = ["Museo Miranda", "Museo Ezeiza"];
 
     function salirDeEdicion() {
       edicion = null;
@@ -342,31 +315,46 @@
       mostrar("vista-ingreso");
     });
 
+    // Categorías, colecciones y términos (una vez por sesión; los nuevos se suman al guardar)
+    async function cargarListas() {
+      [categorias, colecciones, terminos] = MODO_DEMO
+        ? await Promise.all(["categorias", "colecciones", "terminos"].map(demo))
+        : await Promise.all([pbTodos("categorias", "visible = true", sesion.token), pbTodos("colecciones", "", sesion.token), pbTodos("terminos", "", sesion.token)]);
+      categorias.sort((a, b) => a.orden - b.orden);
+      colecciones.sort(porNombre);
+      terminos.sort(porNombre);
+      $("tipos").innerHTML = categorias.map((c, i) =>
+        `<label><input type="radio" name="tipo" value="${esc(c.id)}"${i === 0 ? " checked" : ""}> ${esc(c.nombre)}</label>`).join("");
+    }
+
     async function abrirFormulario() {
       $("quien").textContent = "Ingresaste como " + sesion.nombre;
       $("titulo-carga").textContent = edicion ? "Modificar pieza" : "Cargar una pieza nueva";
       $("guardar").textContent = edicion ? "Guardar cambios" : "Guardar pieza";
       $("eliminar").hidden = !edicion;
-      // Una pieza no cambia de tipo: cada tipo es una colección distinta en PocketBase
-      form.querySelectorAll("input[name=tipo]").forEach(r => r.disabled = !!edicion);
       form.hidden = false;
+      $("error-general").hidden = true;
       mostrar("vista-carga");
+      try {
+        if (!categorias.length) await cargarListas();
+      } catch (err) {
+        console.error(err);
+        form.hidden = true;
+        $("error-general").textContent = err.message === "sesion"
+          ? "Tu sesión venció. Cerrá sesión y volvé a ingresar."
+          : "No se pudo conectar con el servidor. Probá de nuevo en un momento.";
+        $("error-general").hidden = false;
+        return;
+      }
+      limpiarFormulario();
       if (edicion) await cargarPieza();
       $("titulo").focus();
     }
 
     async function cargarPieza() {
-      limpiarFormulario();
       let p;
       try {
-        if (MODO_DEMO) {
-          p = await obtenerPieza(edicion.coleccion, edicion.id);
-        } else {
-          const r = await fetch(`${PB_URL}/api/collections/${encodeURIComponent(edicion.coleccion)}/records/${encodeURIComponent(edicion.id)}`,
-            { headers: { Authorization: sesion.token } });
-          if (!r.ok) throw new Error("PocketBase respondió " + r.status);
-          p = await r.json();
-        }
+        p = await obtenerPieza(edicion.id, sesion.token);
       } catch (err) {
         console.error(err);
         form.hidden = true;
@@ -375,17 +363,26 @@
         return;
       }
       edicion.titulo = p.titulo;
-      form.querySelector(`input[name=tipo][value="${p.collectionName}"]`).checked = true;
-      mostrarGrupo();
-      form.querySelectorAll("input[type=text][name]:enabled, textarea[name]:enabled, select[name]:enabled").forEach(el => el.value = p[el.name] ?? "");
-      const radioDestino = form.querySelector(`input[name=destino][value="${p.destino}"]`);
-      if (radioDestino) radioDestino.checked = true;
+      const radioTipo = form.querySelector(`input[name=tipo][value="${p.categoria}"]`);
+      if (radioTipo) radioTipo.checked = true;
+      form.querySelectorAll("input[type=text][name], textarea[name]").forEach(el => el.value = p[el.name] ?? "");
+      pintarColecciones(p.coleccion);
+      const estado = {};
+      camposDe(p._cat).forEach(c => estado[c.clave] = c.tipo === "texto"
+        ? { texto: (p.ficha && p.ficha[c.clave]) || "" }
+        : { ids: p._terminos.filter(t => t.tipo === c.clave).map(t => t.id), nuevo: "" });
+      pintarPropios(estado);
+      // "Sin Definir" (piezas viejas) no marca ninguna opción: hay que elegir al guardar
+      const amb = p.destino === DESTINO_VENTA ? "tienda" : SEDES.includes(p.destino) ? "museo" : "";
+      form.querySelectorAll("input[name=ambito]").forEach(r => r.checked = r.value === amb);
+      const radioSede = form.querySelector(`input[name=sede][value="${p.destino}"]`);
+      if (radioSede) radioSede.checked = true;
       const radioEstado = form.querySelector(`input[name=estado][value="${p.estado}"]`);
       if (radioEstado) radioEstado.checked = true;
       $("precio").value = p.precio_usd ? String(p.precio_usd).replace(".", ",") : "";
       $("visible").checked = !!p.visible;
-      $("bloque-venta").hidden = destino() !== "Venta";
-      fotos = archivosDe(p).map(nombre => ({ guardada: nombre, vista: urlImagen(p, nombre, "100x100") }));
+      actualizarBloques();
+      fotos = archivosDe(p).map((nombre, i) => ({ guardada: nombre, vista: urlImagen(p, nombre, "100x100"), cara: (p.caras || [])[i] || "" }));
       pintarFotos();
       sinGuardar = false;
     }
@@ -398,13 +395,17 @@
           <img src="${f.vista}" alt="">
           <button type="button" data-quitar="${i}" aria-label="Quitar foto ${i + 1}">×</button>
           <small>${i === 0 ? "Principal" : "Foto " + (i + 1)}</small>
+          <select data-cara="${i}" aria-label="Qué muestra la foto ${i + 1}">
+            <option value="">¿Qué muestra?</option>
+            ${CARAS.map(c => `<option${c === f.cara ? " selected" : ""}>${c}</option>`).join("")}
+          </select>
         </div>`).join("");
     }
 
     function agregarFotos(lista) {
       const validas = [...lista].filter(f => /^image\/(jpeg|png|webp)$/.test(f.type));
       if (validas.length < lista.length) alert("Algunos archivos no son fotos JPG, PNG o WEBP y no se agregaron.");
-      validas.forEach(f => fotos.push({ archivo: f, vista: URL.createObjectURL(f) }));
+      validas.forEach(f => fotos.push({ archivo: f, vista: URL.createObjectURL(f), cara: "" }));
       if (validas.length) { sinGuardar = true; limpiarError("imagenes"); }
       pintarFotos();
     }
@@ -422,27 +423,90 @@
     ["dragleave", "drop"].forEach(t => $("zona").addEventListener(t, () => $("zona").classList.remove("encima")));
     $("zona").addEventListener("drop", e => { e.preventDefault(); agregarFotos(e.dataTransfer.files); });
 
-    // ---------- Formulario ----------
+    // ---------- Colección y campos propios de la categoría ----------
 
     const form = $("form-pieza");
-    const destino = () => form.querySelector("input[name=destino]:checked").value;
-    // El tipo elegido es el nombre de la colección de PocketBase donde se guarda
-    const tipo = () => form.querySelector("input[name=tipo]:checked").value;
+    const ambito = () => form.querySelector("input[name=ambito]:checked")?.value || "";
+    // Valor del campo destino de la base: "Venta" para la tienda, la sede para el museo
+    const destino = () => ambito() === "tienda" ? DESTINO_VENTA
+      : ambito() === "museo" ? form.querySelector("input[name=sede]:checked").value : "";
 
-    function mostrarGrupo() {
-      form.querySelectorAll("fieldset.grupo").forEach(g => g.hidden = g.disabled = g.dataset.tipo !== tipo());
+    // Muestra solo lo que corresponde a museo o a tienda
+    function actualizarBloques() {
+      $("bloque-museo").hidden = ambito() !== "museo";
+      $("bloque-venta").hidden = ambito() !== "tienda";
+      $("medidas-obligatorio").hidden = ambito() !== "tienda";
     }
 
-    form.addEventListener("change", () => {
+    const categoria = () => categorias.find(c => c.id === form.querySelector("input[name=tipo]:checked")?.value);
+
+    function pintarColecciones(elegida = "") {
+      $("coleccion").innerHTML = `<option value="">Sin indicar</option>`
+        + colecciones.map(c => `<option value="${esc(c.id)}"${c.id === elegida ? " selected" : ""}>${esc(c.nombre)}</option>`).join("")
+        + `<option value="${NUEVO}">Otra (escribir)…</option>`;
+      $("coleccion-nueva").hidden = true;
+      $("coleccion-nueva").value = "";
+    }
+
+    // Lo elegido en los campos propios: { clave: { ids, nuevo } } o { clave: { texto } }
+    function leerPropios() {
+      const estado = {};
+      $("campos-propios").querySelectorAll("[data-clave]").forEach(el => {
+        const sel = el.querySelector("select");
+        const nuevo = el.querySelector("[data-nuevo]").value;
+        estado[el.dataset.clave] = sel
+          ? { ids: sel.value && sel.value !== NUEVO ? [sel.value] : [], nuevo: sel.value === NUEVO ? nuevo : "" }
+          : { ids: [...el.querySelectorAll("input[type=checkbox]:checked")].map(i => i.value), nuevo };
+      });
+      $("campos-propios").querySelectorAll("[data-ficha]").forEach(i => estado[i.dataset.ficha] = { texto: i.value });
+      return estado;
+    }
+
+    // Una lista desplegable para los campos de un solo valor, casillas para los de varios,
+    // y siempre la posibilidad de escribir un valor que todavía no está en la lista.
+    function pintarPropios(estado = leerPropios()) {
+      const colec = $("coleccion").value;
+      $("campos-propios").innerHTML = camposDe(categoria()).map(c => {
+        const e = estado[c.clave] || {};
+        const ayuda = c.ayuda ? `<span class="ayuda">${esc(c.ayuda)}</span>` : "";
+        if (c.tipo === "texto") return `<div class="campo" data-campo="${esc(c.clave)}"><label for="f-${esc(c.clave)}">${esc(c.etiqueta)}</label>${ayuda}
+          <input type="text" id="f-${esc(c.clave)}" data-ficha="${esc(c.clave)}" value="${esc(e.texto || "")}"></div>`;
+        const ids = e.ids || [];
+        const lista = terminos.filter(t => t.tipo === c.clave && (!c.porColeccion || !t.coleccion || t.coleccion === colec));
+        if (c.multiple) return `<fieldset class="campo" data-campo="${esc(c.clave)}" data-clave="${esc(c.clave)}"><legend>${esc(c.etiqueta)}</legend>${ayuda}
+          ${lista.length ? `<div class="opciones">${lista.map(t => `<label><input type="checkbox" value="${esc(t.id)}"${ids.includes(t.id) ? " checked" : ""}> ${esc(nombreTermino(t))}</label>`).join("")}</div>` : ""}
+          <input type="text" data-nuevo value="${esc(e.nuevo || "")}" aria-label="Agregar ${esc(c.etiqueta)}"
+            placeholder="${lista.length ? "Otros que no estén en la lista" : "Escribí los valores"}, separados por «${SEPARADOR}»"></fieldset>`;
+        const elegido = e.nuevo ? NUEVO : (ids[0] || "");
+        return `<div class="campo" data-campo="${esc(c.clave)}" data-clave="${esc(c.clave)}"><label for="f-${esc(c.clave)}">${esc(c.etiqueta)}</label>${ayuda}
+          <select id="f-${esc(c.clave)}"><option value="">Sin indicar</option>
+            ${lista.map(t => `<option value="${esc(t.id)}"${t.id === elegido ? " selected" : ""}>${esc(nombreTermino(t))}</option>`).join("")}
+            <option value="${NUEVO}"${elegido === NUEVO ? " selected" : ""}>Otro (escribir)…</option></select>
+          <input type="text" data-nuevo value="${esc(e.nuevo || "")}" placeholder="Escribí el valor nuevo" aria-label="Valor nuevo para ${esc(c.etiqueta)}"${elegido === NUEVO ? "" : " hidden"}></div>`;
+      }).join("");
+    }
+
+    form.addEventListener("change", e => {
       sinGuardar = true;
-      $("bloque-venta").hidden = destino() !== "Venta";
-      mostrarGrupo();
+      const t = e.target;
+      if (t.name === "ambito") {
+        actualizarBloques();
+        limpiarError("ambito");
+        // En el museo lo principal es la catalogación: se abren los "Más datos"
+        if (t.value === "museo") form.querySelector("details.mas").open = true;
+      }
+      if (t.id === "coleccion") $("coleccion-nueva").hidden = t.value !== NUEVO;
+      // Al cambiar de tipo cambian los campos propios; al cambiar de colección, la lista de firmas
+      if (t.name === "tipo" || t.id === "coleccion") pintarPropios();
+      if (t.matches("[data-clave] select")) t.nextElementSibling.hidden = t.value !== NUEVO;
+      if (t.dataset.cara) fotos[Number(t.dataset.cara)].cara = t.value;
     });
     form.addEventListener("input", e => { sinGuardar = true; limpiarError(e.target.closest("[data-campo]")?.dataset.campo); });
     window.addEventListener("beforeunload", e => { if (sinGuardar && !$("vista-carga").hidden) e.preventDefault(); });
 
-    // Algunos campos (fecha, inscripciones) existen en más de un grupo: se usa el del tipo elegido
-    const campoDe = campo => [...form.querySelectorAll(`[data-campo="${campo}"]`)].find(c => !c.closest("fieldset:disabled"));
+    // ---------- Errores ----------
+
+    const campoDe = campo => form.querySelector(`[data-campo="${campo}"]`);
 
     function marcarError(campo, texto) {
       const c = campoDe(campo);
@@ -455,16 +519,21 @@
     }
 
     function limpiarError(campo) {
-      if (!campo) return;
-      form.querySelectorAll(`[data-campo="${campo}"]`).forEach(c => {
-        c.classList.remove("con-error");
-        c.querySelectorAll(".error").forEach(x => x.remove());
-      });
+      const c = campo && campoDe(campo);
+      if (!c) return;
+      c.classList.remove("con-error");
+      c.querySelectorAll(".error").forEach(x => x.remove());
     }
 
     function limpiarErrores() {
       form.querySelectorAll("[data-campo]").forEach(c => limpiarError(c.dataset.campo));
       $("error-general").hidden = true;
+    }
+
+    function errorGeneral(texto) {
+      $("error-general").textContent = texto;
+      $("error-general").hidden = false;
+      $("error-general").scrollIntoView({ behavior: "smooth" });
     }
 
     // Acepta "1.500,50", "1500.50" o "1500"
@@ -479,13 +548,15 @@
     // Revisión antes de enviar, para avisar sin esperar al servidor
     function revisar() {
       const errores = {};
+      if (!ambito()) errores.ambito = "Elegí si la pieza va al museo o a la tienda.";
       if (!fotos.length) errores.imagenes = "Agregá al menos una foto.";
       if (!$("titulo").value.trim()) errores.titulo = "Escribí un título.";
       if (!$("inventario").value.trim()) errores.inventario = "Escribí el número de inventario.";
-      if (!$("medidas").value.trim()) errores.medidas = "Escribí las medidas.";
-      if (destino() === "Venta") {
+      if ($("coleccion").value === NUEVO && !$("coleccion-nueva").value.trim()) errores.coleccion = "Escribí el nombre de la colección nueva.";
+      if (ambito() === "tienda") {
+        if (!$("medidas").value.trim()) errores.medidas = "Para la tienda hacen falta las medidas.";
         const p = leerPrecio($("precio").value);
-        if (!(p > 0)) errores.precio_usd = "Para la venta hace falta un precio mayor a 0.";
+        if (!(p > 0)) errores.precio_usd = "Para la tienda hace falta un precio mayor a 0.";
       }
       return errores;
     }
@@ -499,10 +570,63 @@
 
     function mostrarErrores(errores) {
       let primero = null;
+      const sinCampo = [];
       for (const [campo, texto] of Object.entries(errores)) {
-        if (marcarError(campo, texto) && !primero) primero = campoDe(campo);
+        if (marcarError(campo, texto)) primero ||= campoDe(campo);
+        else sinCampo.push(texto);
       }
-      (primero || $("error-general")).scrollIntoView({ behavior: "smooth", block: "center" });
+      if (sinCampo.length) errorGeneral(sinCampo.join(" "));
+      else primero.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    // ---------- Guardar ----------
+
+    async function crearRegistro(coleccion, datos) {
+      const r = await fetch(`${PB_URL}/api/collections/${coleccion}/records`, {
+        method: "POST", headers: { Authorization: sesion.token, "Content-Type": "application/json" }, body: JSON.stringify(datos),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw Object.assign(new Error(d.message || "No se pudo guardar"), { status: r.status });
+      return d;
+    }
+
+    // Colección elegida; si se escribió una nueva (y no existe ya con ese nombre), se crea
+    async function coleccionElegida() {
+      if ($("coleccion").value !== NUEVO) return $("coleccion").value;
+      const nombre = $("coleccion-nueva").value.trim();
+      let c = colecciones.find(x => normalizar(x.nombre) === normalizar(nombre));
+      if (!c) {
+        c = await crearRegistro("colecciones", { nombre, slug: slugDe(nombre) });
+        colecciones.push(c);
+        colecciones.sort(porNombre);
+      }
+      return c.id;
+    }
+
+    // Término de una lista; si se escribió uno nuevo (y no existe ya, sin importar mayúsculas ni tildes), se crea
+    async function terminoId(campo, nombre, colec) {
+      const deColec = campo.porColeccion ? colec : "";
+      let t = terminos.find(x => x.tipo === campo.clave && (x.coleccion || "") === deColec && normalizar(x.nombre) === normalizar(nombre));
+      if (!t) {
+        t = await crearRegistro("terminos", { tipo: campo.clave, nombre, coleccion: deColec });
+        terminos.push(t);
+        terminos.sort(porNombre);
+      }
+      return t.id;
+    }
+
+    // Términos elegidos (ids) y datos de texto (ficha) de los campos propios
+    async function leerFicha(colec) {
+      const estado = leerPropios(), ids = [], ficha = {};
+      for (const c of camposDe(categoria())) {
+        const e = estado[c.clave];
+        if (!e) continue;
+        if (c.tipo === "texto") { if (e.texto.trim()) ficha[c.clave] = e.texto.trim(); continue; }
+        ids.push(...e.ids);
+        const nuevos = c.multiple ? e.nuevo.split(SEPARADOR) : [e.nuevo];
+        for (const n of nuevos.map(s => s.trim()).filter(Boolean)) ids.push(await terminoId(c, n, colec));
+      }
+      return { ids: [...new Set(ids)], ficha };
     }
 
     form.addEventListener("submit", async e => {
@@ -513,56 +637,57 @@
       if (MODO_DEMO) return mostrarDemo(edicion ? "¡Cambios guardados!" : "¡Pieza guardada!", fotos[0].vista,
         `«${$("titulo").value.trim()}» pasó todas las revisiones. En la versión real quedaría guardada en la base de datos; en esta demostración no se guarda.`);
 
-      const datos = new FormData();
-      form.querySelectorAll("input[type=text][name]:enabled, textarea[name]:enabled, select[name]:enabled").forEach(el => datos.append(el.name, el.value.trim()));
-      datos.append("destino", destino());
-      if (destino() === "Venta") {
-        datos.append("precio_usd", leerPrecio($("precio").value));
-        datos.append("estado", form.querySelector("input[name=estado]:checked").value);
-      }
-      datos.append("visible", $("visible").checked);
-      if (edicion) {
-        // PocketBase: "imagenes-" borra fotos guardadas, "imagenes+" agrega nuevas al final
-        quitadas.forEach(nombre => datos.append("imagenes-", nombre));
-        fotos.filter(f => f.archivo).forEach(f => datos.append("imagenes+", f.archivo));
-      } else {
-        fotos.forEach(f => datos.append("imagenes", f.archivo));
-      }
-
       const boton = $("guardar");
       const textoBoton = boton.textContent;
       boton.disabled = true;
       boton.textContent = "Guardando…";
       try {
-        const url = edicion
-          ? `${PB_URL}/api/collections/${encodeURIComponent(edicion.coleccion)}/records/${encodeURIComponent(edicion.id)}`
-          : `${PB_URL}/api/collections/${tipo()}/records`;
-        const r = await fetch(url, {
-          method: edicion ? "PATCH" : "POST", headers: { Authorization: sesion.token }, body: datos,
-        });
-        const d = await r.json().catch(() => ({}));
+        const colec = await coleccionElegida();
+        const { ids, ficha } = await leerFicha(colec);
 
-        if (r.status === 401 || r.status === 403) {
-          $("error-general").textContent = "Tu sesión venció o no tenés permiso para cargar piezas. Cerrá sesión y volvé a ingresar (los datos de esta pieza no se pierden si no recargás la página).";
-          $("error-general").hidden = false;
-          return $("error-general").scrollIntoView({ behavior: "smooth" });
+        const datos = new FormData();
+        form.querySelectorAll("input[type=text][name], textarea[name]").forEach(el => datos.append(el.name, el.value.trim()));
+        datos.append("categoria", categoria().id);
+        datos.append("coleccion", colec);
+        datos.append("destino", destino());
+        if (ambito() === "tienda") {
+          datos.append("precio_usd", leerPrecio($("precio").value));
+          datos.append("estado", form.querySelector("input[name=estado]:checked").value);
         }
-        if (!r.ok) {
-          const porCampo = {};
-          for (const [campo, err] of Object.entries(d.data || {})) porCampo[campo] = MENSAJES[err.code] || err.message;
-          if (Object.keys(porCampo).length) return mostrarErrores(porCampo);
-          // Mensajes de las reglas del servidor (por ejemplo, el precio para la venta)
-          $("error-general").textContent = d.message || "No se pudo guardar. Probá de nuevo.";
-          $("error-general").hidden = false;
-          return $("error-general").scrollIntoView({ behavior: "smooth" });
+        datos.append("visible", $("visible").checked);
+        if (ids.length) ids.forEach(id => datos.append("terminos", id));
+        else datos.append("terminos", "");
+        datos.append("ficha", JSON.stringify(ficha));
+        // Las fotos ya guardadas quedan primero y las nuevas se agregan al final: el mismo orden que "fotos"
+        datos.append("caras", JSON.stringify(fotos.map(f => f.cara || "")));
+        if (edicion) {
+          // PocketBase: "imagenes-" borra fotos guardadas, "imagenes+" agrega nuevas al final
+          quitadas.forEach(nombre => datos.append("imagenes-", nombre));
+          fotos.filter(f => f.archivo).forEach(f => datos.append("imagenes+", f.archivo));
+        } else {
+          fotos.forEach(f => datos.append("imagenes", f.archivo));
         }
+
+        const url = `${PB_URL}/api/collections/piezas/records` + (edicion ? "/" + encodeURIComponent(edicion.id) : "");
+        const r = await fetch(url, { method: edicion ? "PATCH" : "POST", headers: { Authorization: sesion.token }, body: datos });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw Object.assign(new Error(d.message || "No se pudo guardar. Probá de nuevo."), { status: r.status, data: d.data });
 
         sinGuardar = false;
+        ambitoPreferido = ambito();
         mostrarListo(d);
       } catch (err) {
         console.error(err);
-        $("error-general").textContent = "No se pudo conectar con el servidor. Revisá la conexión y probá de nuevo.";
-        $("error-general").hidden = false;
+        if (err.status === 401 || err.status === 403) {
+          errorGeneral("Tu sesión venció o no tenés permiso para cargar piezas. Cerrá sesión y volvé a ingresar (los datos de esta pieza no se pierden si no recargás la página).");
+        } else if (err.status) {
+          const porCampo = {};
+          for (const [campo, e] of Object.entries(err.data || {})) porCampo[campo] = MENSAJES[e.code] || e.message;
+          // Sin errores por campo: mensaje de las reglas del servidor (por ejemplo, el precio para la venta)
+          if (Object.keys(porCampo).length) mostrarErrores(porCampo); else errorGeneral(err.message);
+        } else {
+          errorGeneral("No se pudo conectar con el servidor. Revisá la conexión y probá de nuevo.");
+        }
       } finally {
         boton.disabled = false;
         boton.textContent = textoBoton;
@@ -577,15 +702,13 @@
       boton.disabled = true;
       $("error-general").hidden = true;
       try {
-        const r = await fetch(`${PB_URL}/api/collections/${encodeURIComponent(edicion.coleccion)}/records/${encodeURIComponent(edicion.id)}`, {
+        const r = await fetch(`${PB_URL}/api/collections/piezas/records/${encodeURIComponent(edicion.id)}`, {
           method: "DELETE", headers: { Authorization: sesion.token },
         });
         if (!r.ok) {
-          $("error-general").textContent = r.status === 401 || r.status === 403
+          return errorGeneral(r.status === 401 || r.status === 403
             ? "Tu sesión venció o no tenés permiso para eliminar piezas. Cerrá sesión y volvé a ingresar."
-            : "No se pudo eliminar la pieza. Probá de nuevo.";
-          $("error-general").hidden = false;
-          return $("error-general").scrollIntoView({ behavior: "smooth" });
+            : "No se pudo eliminar la pieza. Probá de nuevo.");
         }
         const titulo = edicion.titulo;
         salirDeEdicion();
@@ -596,8 +719,7 @@
         mostrar("vista-listo");
       } catch (err) {
         console.error(err);
-        $("error-general").textContent = "No se pudo conectar con el servidor. Revisá la conexión y probá de nuevo.";
-        $("error-general").hidden = false;
+        errorGeneral("No se pudo conectar con el servidor. Revisá la conexión y probá de nuevo.");
       } finally {
         boton.disabled = false;
       }
@@ -608,14 +730,12 @@
       $("listo-img").src = archivo ? urlImagen(p, archivo, "400x0") : "";
       $("listo-img").hidden = !archivo;
       $("listo-titulo").textContent = edicion ? "¡Cambios guardados!" : "¡Pieza guardada!";
-      const enTienda = p.visible && p.destino === "Venta";
-      $("listo-texto").textContent = enTienda
-        ? `«${p.titulo}» ya aparece en la tienda.`
-        : p.visible
-          ? `«${p.titulo}» quedó guardada. No aparece en la tienda porque su destino no es «Venta».`
-          : `«${p.titulo}» quedó guardada, oculta de la web.`;
-      $("ver").hidden = !enTienda;
-      $("ver").href = `pieza.html?c=${encodeURIComponent(p.collectionName)}&id=${encodeURIComponent(p.id)}`;
+      const lugar = p.destino === DESTINO_VENTA ? "la tienda" : p.destino;
+      $("listo-texto").textContent = p.visible
+        ? `«${p.titulo}» ya aparece en ${lugar}.`
+        : `«${p.titulo}» quedó guardada en ${lugar}, oculta de la web.`;
+      $("ver").hidden = !p.visible;
+      $("ver").href = `pieza.html?id=${encodeURIComponent(p.id)}`;
       salirDeEdicion();
       limpiarFormulario();
       mostrar("vista-listo");
@@ -642,9 +762,11 @@
       quitadas = [];
       pintarFotos();
       limpiarErrores();
-      $("bloque-venta").hidden = true;
-      mostrarGrupo();
-      form.querySelector("details.mas").open = false;
+      form.querySelectorAll("input[name=ambito]").forEach(r => r.checked = r.value === ambitoPreferido);
+      actualizarBloques();
+      pintarColecciones();
+      pintarPropios({});
+      form.querySelector("details.mas").open = ambito() === "museo";
       sinGuardar = false;
     }
 

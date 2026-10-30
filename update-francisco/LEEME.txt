@@ -1,0 +1,76 @@
+VISOR DE COLECCIONES FOTOGRÁFICAS CONECTADO A LA BASE DE PRÓDIGO
+Fecha: 2026-10-30
+
+Esta carpeta es el sitio prodigo_colecciones_fotograficas con UN solo cambio de
+lógica: el visor ya no lee los JSON del repositorio prodigo-catalogador, sino la
+base de datos de Pródigo (PocketBase), la misma que usa la tienda. Así el museo
+y la tienda comparten fichas, colecciones y vocabulario.
+
+
+QUÉ CAMBIÓ
+  remote.js    REESCRITO. Lee de PocketBase (API pública, sin tokens):
+               - piezas de la categoría Fotografías con destino Museo Miranda
+                 o Museo Ezeiza y visibles (las de la tienda no se muestran);
+               - colecciones (el selector de arriba) y términos (los filtros).
+               Arma los mismos datos que antes armaba catalog-format.js, así
+               que app.js y grid-sort.js funcionan igual: filtros, cantidades,
+               período, orden (incluida la cronología por número original),
+               visor con todas las caras, zoom y ?coleccion=<slug>.
+               Cada 30 segundos se fija si hubo cambios en la base y, si los
+               hubo, vuelve a cargar (como antes con el índice de GitHub).
+  index.html   Solo cambia la versión de remote.js (?v=pocketbase1) para que
+               los navegadores no usen la copia vieja guardada.
+
+  Sin cambios: app.js, grid-sort.js, style.css, catalog-format.js (este último
+  ya no lo usa remote.js; se dejó por si se usa en otra parte).
+
+
+ANTES DE PUBLICAR
+  1. En remote.js, cambiar PB_URL (primera línea de la configuración) por la
+     dirección pública de PocketBase, con https. Hoy apunta a la computadora
+     local (http://127.0.0.1:8090), que solo sirve para probar.
+  2. Copiar estos archivos sobre los del repositorio
+     prodigo_colecciones_fotograficas.
+
+
+CÓMO SE CORRESPONDEN LOS DATOS
+  Filtro del visor          Términos de la base (tipo)
+  Autores                   autor
+  Personas identificadas    persona_identificada
+  Personas                  personas
+  Tipo de imagen            tipo_imagen
+  Tipo de retrato           retrato
+  Encuadre                  encuadre
+  Orientación               orientacion
+  Color                     color  (byn -> "Blanco y negro", sepia -> "Sepia",
+                                    iluminado -> "Coloreada a mano")
+  Ambiente                  ambiente
+  Objetos                   objeto
+  Destacados                destacado
+  Firma del estudio         firma  (con su código y su colección)
+  Período                   anio_desde / anio_hasta de la pieza
+  Número original           ficha.numero_original
+  Frente / Reverso / Tapa   caras (una por imagen, en orden)
+
+  "Composición" y "Detalles" siguen sin datos, igual que antes.
+
+
+DIFERENCIAS CON LA VERSIÓN ANTERIOR
+  - Las imágenes vienen de PocketBase en JPG (vista de 2200 px de alto y
+    miniatura de 400 px de ancho), convertidas de las vistas WEBP del
+    catalogador.
+  - La base no guarda el tamaño en píxeles de cada imagen: mientras carga,
+    cada miniatura reserva una proporción aproximada (2:3) y después se ajusta.
+  - El "identificador" del visor es el número original; si no hay, el nombre
+    del archivo TIF.
+
+
+EL CATALOGADOR (prodigo-catalogador) TODAVÍA GUARDA EN GITHUB
+  Esta carpeta conecta el VISOR. El catalogador sigue guardando las fichas en
+  su repositorio. Mientras no se adapte, el camino es:
+    catalogador (GitHub)  ->  importar_catalogador.py  ->  PocketBase  ->  visor
+  importar_catalogador.py (en el proyecto de la tienda) agrega a la base las
+  fichas nuevas que estén completas; no actualiza las que ya importó.
+  Adaptar el catalogador para que guarde directo en PocketBase es el paso
+  siguiente: hay que decidir cómo se pasa de su ficha por imagen a la pieza de
+  la base (con todas sus caras) y cómo se manejan los borradores.

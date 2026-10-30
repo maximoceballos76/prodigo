@@ -1,5 +1,108 @@
 [
  {
+  "campos": [
+   {
+    "ayuda": "Fotógrafo o estudio.",
+    "clave": "autor",
+    "etiqueta": "Autor",
+    "filtro": true,
+    "multiple": true,
+    "tipo": "termino"
+   },
+   {
+    "ayuda": "Nombre y apellido de quienes aparecen, si se conocen.",
+    "clave": "persona_identificada",
+    "etiqueta": "Personas identificadas",
+    "filtro": true,
+    "multiple": true,
+    "tipo": "termino"
+   },
+   {
+    "ayuda": "Quiénes aparecen: mujeres, hombres, niños...",
+    "clave": "personas",
+    "etiqueta": "Personas",
+    "filtro": true,
+    "multiple": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "tipo_imagen",
+    "etiqueta": "Tipo de imagen",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "retrato",
+    "etiqueta": "Tipo de retrato",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "encuadre",
+    "etiqueta": "Encuadre",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "orientacion",
+    "etiqueta": "Orientación",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "color",
+    "etiqueta": "Color",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "ambiente",
+    "etiqueta": "Ambiente",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "objeto",
+    "etiqueta": "Objetos",
+    "filtro": true,
+    "multiple": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "destacado",
+    "etiqueta": "Destacados",
+    "filtro": true,
+    "multiple": true,
+    "tipo": "termino"
+   },
+   {
+    "ayuda": "Sello o firma del estudio en el frente o el reverso.",
+    "clave": "firma",
+    "etiqueta": "Firma del estudio",
+    "filtro": true,
+    "multiple": true,
+    "porColeccion": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "soporte",
+    "etiqueta": "Soporte",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "proceso",
+    "etiqueta": "Proceso",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "ayuda": "Número de negativo o de copia que figura en la pieza.",
+    "clave": "numero_original",
+    "etiqueta": "Número original",
+    "tipo": "texto"
+   }
+  ],
   "collectionId": "pbc_2687480828",
   "collectionName": "categorias",
   "created": "2026-10-24 06:28:19.696Z",
@@ -8,10 +111,45 @@
   "nombre": "Fotografías",
   "orden": 1,
   "slug": "fotografias",
-  "updated": "2026-10-24 07:25:41.881Z",
+  "updated": "2026-10-30 03:23:35.973Z",
   "visible": true
  },
  {
+  "campos": [
+   {
+    "ayuda": "Casa editora o impresor.",
+    "clave": "editorial",
+    "etiqueta": "Editorial",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "ayuda": "Lugar que muestra la postal.",
+    "clave": "lugar",
+    "etiqueta": "Lugar",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "tecnica",
+    "etiqueta": "Técnica",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "color",
+    "etiqueta": "Color",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "ayuda": "Si fue enviada por correo (tiene sello o matasellos).",
+    "clave": "circulacion",
+    "etiqueta": "Circulación",
+    "filtro": true,
+    "tipo": "termino"
+   }
+  ],
   "collectionId": "pbc_2687480828",
   "collectionName": "categorias",
   "created": "2026-10-25 01:03:58.708Z",
@@ -20,10 +158,47 @@
   "nombre": "Postales",
   "orden": 2,
   "slug": "postales",
-  "updated": "2026-10-25 01:03:58.708Z",
+  "updated": "2026-10-30 03:23:35.974Z",
   "visible": true
  },
  {
+  "campos": [
+   {
+    "clave": "marca",
+    "etiqueta": "Marca",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "ayuda": "Ej: Lettera 32",
+    "clave": "modelo",
+    "etiqueta": "Modelo",
+    "tipo": "texto"
+   },
+   {
+    "clave": "origen",
+    "etiqueta": "País de origen",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "numero_serie",
+    "etiqueta": "N.º de serie",
+    "tipo": "texto"
+   },
+   {
+    "clave": "teclado",
+    "etiqueta": "Teclado",
+    "filtro": true,
+    "tipo": "termino"
+   },
+   {
+    "clave": "funcionamiento",
+    "etiqueta": "Funcionamiento",
+    "filtro": true,
+    "tipo": "termino"
+   }
+  ],
   "collectionId": "pbc_2687480828",
   "collectionName": "categorias",
   "created": "2026-10-25 01:03:58.709Z",
@@ -32,7 +207,7 @@
   "nombre": "Máquinas de escribir",
   "orden": 3,
   "slug": "maquinas_de_escribir",
-  "updated": "2026-10-25 01:03:58.709Z",
+  "updated": "2026-10-30 03:23:35.974Z",
   "visible": true
  }
 ]

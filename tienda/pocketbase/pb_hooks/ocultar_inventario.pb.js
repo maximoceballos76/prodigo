@@ -5,4 +5,4 @@ onRecordEnrich((e) => {
   const interno = auth && (auth.isSuperuser() || auth.collection().name === "editores");
   if (!interno) e.record.hide("inventario");
   e.next();
-}, "fotografias", "postales", "maquinas_de_escribir");
+}, "piezas");

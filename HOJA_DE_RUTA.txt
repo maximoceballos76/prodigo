@@ -1,6 +1,6 @@
 PRÓDIGO – HOJA DE RUTA
 Creada: 2026-10-24
-Última actualización: 2026-10-25
+Última actualización: 2026-10-30
 
 Lista de lo que le falta a la página, ordenada por prioridad.
 Marcar con [x] lo terminado. Agregar ideas nuevas al final de la etapa que
@@ -16,20 +16,81 @@ ETAPA 1 – ARREGLAR LO QUE HOY ESTÁ A MEDIAS
 
 [ ] Correo real de consultas. El botón "Consultar por esta pieza" manda a
     contacto@ejemplo.com (pieza.html).
-[ ] Antes de publicar: reemplazar las piezas de ejemplo (FOT-0003 a 0008,
-    POS-0005 a 0010, MAQ-0003 a 0008) por piezas reales, o borrarlas. Sus
-    autores, colecciones y precios son inventados (ver DOCUMENTACION.txt, 5).
-[ ] Revisar fechas, medidas, marca y modelo de máquinas y postales
-    (se estimaron mirando las fotos).
+[x] Borradas las 26 piezas de ejemplo con sus términos, colecciones y
+    fotos (2026-10-30). Desde ahora, solo piezas reales.
+[x] Las 219 fotos del catalogador de Francisco van a Museo Miranda.
+[x] Formulario de carga separado en museo / tienda: primero se elige para
+    dónde es la pieza y se muestra solo lo que corresponde (sede y TIF
+    para el museo; precio, estado y medidas obligatorias para la tienda).
+    El panel separa Tienda y Museo y tiene un botón de carga para cada uno.
+[ ] PROVISORIO – REVERTIR AL CARGAR LOS ARTÍCULOS REALES DE LA TIENDA:
+    desde 2026-10-30 las 219 fotos del catalogador de Francisco están en la
+    tienda (destino "Venta", sin precio: "Consultar precio") solo para que
+    el sitio no se vea vacío. Su destino real es Museo Miranda. Al cargar
+    los primeros artículos reales:
+      1. Pasar esas 219 piezas a "Museo Miranda" (son las que tienen
+         fuente "Catalogador de colecciones fotográficas...").
+      2. En pb_hooks/venta.js, volver a activar la regla comentada que
+         exige precio > 0 para Venta, y reiniciar PocketBase.
+      3. python exportar_demo.py (para la demo de GitHub Pages).
+[ ] Cargar las primeras piezas reales en venta.
+[x] Visor de Francisco (museo) conectado a PocketBase: update-francisco/
+    (2026-10-30). Falta copiarlo a su repositorio y cambiar PB_URL por la
+    dirección pública cuando PocketBase esté publicado.
+[ ] Catalogador de Francisco: adaptarlo para que guarde directo en
+    PocketBase (hoy guarda en GitHub y se pasa con importar_catalogador.py).
+    Hay que definir con él cómo su ficha por imagen pasa a la pieza con
+    todas sus caras, y cómo se manejan los borradores.
 [ ] Piezas "Vendida": hoy siguen apareciendo en la tienda como cualquier
     otra. Decidir: ocultarlas, o mostrarlas con el cartel "Vendida" y sin
     botón de consulta.
-[ ] Borrar tienda/piezas.js (datos de ejemplo viejos que ya no usa nadie).
+[x] Borrado tienda/piezas.js (datos de ejemplo viejos).
 [ ] Crear las cuentas de editores reales desde el panel de PocketBase.
 
 
 ==============================================================================
-ETAPA 2 – CARGA Y EDICIÓN DE PIEZAS (cargar.html)
+ETAPA 2 – BASE DE DATOS (antes de cargar las ~3500 piezas del museo)
+Reestructurar ahora, con ~26 piezas de ejemplo, es barato; con 3500 cargadas
+sería una migración de datos de verdad. PocketBase alcanza de sobra para este
+volumen: no hace falta cambiar de herramienta.
+==============================================================================
+
+[x] Fijar la versión de PocketBase (0.40.6): anotada al principio de
+    DOCUMENTACION.txt, con el procedimiento para actualizar.
+[x] Base única para tienda y museo (2026-10-30): una sola colección
+    "piezas" con relación a "categorias"; inventario único en todo el
+    museo; nueva categoría o campo = editar categorias.campos, sin código.
+    Los campos propios se definen por categoría (no como columnas sueltas,
+    porque con ~30 categorías serían cientos de columnas vacías).
+[x] Vocabulario controlado: "terminos" (autor, encuadre, marca, editorial,
+    firma de estudio...) y "colecciones", en vez de texto libre.
+[x] Fecha: anio_desde / anio_hasta se calculan solos desde el texto.
+[x] Adaptados api.js, cargar.html, admin.html, tienda.html, pieza.html,
+    pb_hooks/, exportar_demo.py y la demo (tienda/datos/).
+[x] Filtros de la tienda iguales a los del visor de colecciones
+    fotográficas de Francisco (autor, personas, encuadre, orientación,
+    color, ambiente, objetos, destacados, firma del estudio, período...),
+    con cantidad por opción y buscador en las listas largas.
+[x] Importadas las 219 fotografías catalogadas en el catalogador de
+    Francisco (importar_catalogador.py; se puede volver a correr).
+[ ] Decidir con Francisco cómo sigue el catalogador: lo ideal es que guarde
+    directo en PocketBase y que su visor lea de PocketBase, así cada pieza
+    se cataloga una sola vez. Mientras tanto, correr
+    importar_catalogador.py cada vez que cargue fichas nuevas (solo agrega
+    las nuevas; no actualiza las ya importadas).
+[ ] Fotos importadas: revisar los títulos (son automáticos, ej. "Retrato
+    individual, 1918"), definir su N.º de inventario real (hoy es la ruta
+    del TIF, ej. bixio/img024).
+[ ] Revisar términos repetidos con otra forma de escribirse y unirlos.
+    Cargar "variantes" donde sirva (ej. "E. Bixio" para Florencio Bixio).
+[ ] Destinos / sedes (Museo Miranda, Museo Ezeiza, ...) como colección
+    propia en vez de una lista fija de opciones.
+[ ] Definir cómo se cargan el resto de las ~3500 piezas: una por una desde
+    cargar.html, con el catalogador, o importación desde una planilla.
+
+
+==============================================================================
+ETAPA 3 – CARGA Y EDICIÓN DE PIEZAS (cargar.html)
 ==============================================================================
 
 [x] Modificar y eliminar una pieza ya cargada (cargar.html?c=...&id=...).
@@ -41,12 +102,14 @@ ETAPA 2 – CARGA Y EDICIÓN DE PIEZAS (cargar.html)
 [ ] Reordenar las fotos de una pieza (elegir cuál es la principal).
 [ ] Achicar las fotos antes de subirlas (hoy se sube el archivo original,
     hasta 50 MB).
-[ ] Avisar si el N.º de inventario ya existe en OTRA categoría (hoy solo
-    se controla dentro de la misma).
+(El aviso de N.º de inventario repetido en otra categoría quedó resuelto
+con la colección única de la Etapa 2.)
+[ ] Elegir varios términos con muchas opciones (ej. 34 "destacados") es
+    incómodo con casillas: sumar un buscador como el de los filtros.
 
 
 ==============================================================================
-ETAPA 3 – TIENDA (tienda.html y pieza.html)
+ETAPA 4 – TIENDA (tienda.html y pieza.html)
 ==============================================================================
 
 [ ] Buscador por título / descripción.
@@ -55,7 +118,8 @@ ETAPA 3 – TIENDA (tienda.html y pieza.html)
 [ ] Recordar la categoría elegida en la dirección (tienda.html?cat=postales),
     para poder compartir el link y que "Volver al catálogo" vuelva a la
     misma categoría.
-[ ] Paginación o "cargar más" (hoy trae hasta 200 piezas por categoría).
+[ ] Paginación o "cargar más" en la grilla (hoy trae y muestra todas las
+    piezas de una vez; con cientos en venta conviene mostrar de a partes).
 [ ] Ficha: piezas relacionadas (otras de la misma categoría) al pie.
 [ ] Ficha: ver la foto en grande / zoom (el campo para zoom profundo con
     .dzi ya estuvo pensado: ruta_tiles / archivo_master).
@@ -66,7 +130,7 @@ ETAPA 3 – TIENDA (tienda.html y pieza.html)
 
 
 ==============================================================================
-ETAPA 4 – SECCIONES NUEVAS (más allá de la tienda)
+ETAPA 5 – SECCIONES NUEVAS (más allá de la tienda)
 Se agregan en tienda/cabecera.js → SECCIONES (ver DOCUMENTACION.txt).
 ==============================================================================
 
@@ -75,7 +139,9 @@ Se agregan en tienda/cabecera.js → SECCIONES (ver DOCUMENTACION.txt).
     entrada, cantidad de piezas, correo) y, si se quiere, la foto.
 [ ] Portada: sumar debajo piezas destacadas y accesos a las secciones.
 [ ] Colección: piezas que NO están en venta (destino Museo Miranda /
-    Museo Ezeiza), para mostrar el acervo sin precio.
+    Museo Ezeiza), para mostrar el acervo sin precio. Se puede armar como
+    tienda.html con cargarCatalogo({ soloVenta: false }): los filtros y
+    la ficha (sin precio para las piezas del museo) ya funcionan.
 [ ] Museos: una página por museo (Miranda, Ezeiza) con dirección,
     horarios, cómo llegar, fotos.
 [ ] Nosotros / Historia del proyecto.
@@ -85,18 +151,31 @@ Se agregan en tienda/cabecera.js → SECCIONES (ver DOCUMENTACION.txt).
 
 
 ==============================================================================
-ETAPA 5 – PUBLICAR LA PÁGINA (producción)
+ETAPA 6 – PUBLICAR LA PÁGINA (producción)
 ==============================================================================
 
 [x] Versión de exhibición (solo lectura) en GitHub Pages:
     https://maximoceballos76.github.io/prodigo/ (ver DOCUMENTACION.txt, 6).
 [ ] Elegir hosting para la web (archivos de tienda/) y para PocketBase
-    (necesita un servidor que quede prendido: VPS, Fly.io, PocketHost, etc.).
+    (necesita un servidor que quede prendido y con disco persistente: VPS,
+    Fly.io con volume, PocketHost, etc.; no sirven Vercel, Netlify ni
+    GitHub Pages).
+[ ] En un VPS: dejar PocketBase como servicio (systemd) para que arranque
+    solo y se levante si se cae; HTTPS con "pocketbase serve dominio" o con
+    Caddy / nginx adelante.
+[ ] Calcular cuánto van a ocupar las fotos web de las ~3500 piezas y
+    decidir si van en el disco del servidor o en un almacenamiento tipo S3
+    (Cloudflare R2, Backblaze), que PocketBase ya soporta.
 [ ] Dominio propio y HTTPS.
 [ ] Cambiar PB_URL en tienda/api.js por la dirección pública de PocketBase.
 [ ] Configurar en PocketBase el acceso solo desde el dominio de la web.
-[ ] Copias de seguridad automáticas de pb_data (hoy son manuales, en
-    backups/).
+[ ] Copias de seguridad automáticas de pb_data y de las fotos subidas
+    (hoy son manuales, en backups/). PocketBase trae respaldos
+    programados, al disco o a S3.
+[ ] Copias de seguridad automáticas de los TIF originales. Viven en un
+    disco duro, fuera de PocketBase (la base solo guarda el nombre del
+    archivo en "archivo_master"). Definir dónde va la copia (otro disco,
+    la nube) y cada cuánto se hace.
 [ ] Contraseñas fuertes para administradores y editores.
 [ ] Título, descripción e imagen para cuando se comparte un link
     (WhatsApp, redes) y para buscadores. Ojo: la ficha arma el contenido
@@ -108,11 +187,13 @@ ETAPA 5 – PUBLICAR LA PÁGINA (producción)
 
 
 ==============================================================================
-ETAPA 6 – MÁS ADELANTE (si el proyecto lo necesita)
+ETAPA 7 – MÁS ADELANTE (si el proyecto lo necesita)
 ==============================================================================
 
 [ ] Venta online con pago (Mercado Pago / tarjeta) y carrito.
     Hoy la venta es por consulta, que para piezas únicas suele alcanzar.
+[ ] Colección "ventas" (comprador, fecha, precio cobrado), si la tienda
+    crece. Hoy la venta es solo el estado de la pieza.
 [ ] Versión en inglés.
 [ ] Exportar el inventario a planilla (Excel / CSV).
 [ ] Aviso por correo al administrador cuando llega una consulta o se
@@ -123,7 +204,10 @@ ETAPA 6 – MÁS ADELANTE (si el proyecto lo necesita)
 IDEAS SUELTAS (agregar acá lo que vaya surgiendo)
 ==============================================================================
 
--
+- Pasar de PocketBase a PostgreSQL / MySQL solo si aparece alguno de
+  estos casos: mucho tráfico con muchas compras a la vez, informes
+  complejos que crucen muchas tablas, o un hosting que solo ofrezca
+  PHP + MySQL. Los datos salen fácil (PocketBase usa SQLite).
 
 
 ==============================================================================

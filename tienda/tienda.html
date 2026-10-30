@@ -43,12 +43,22 @@
               <option value="precio-asc">Precio: menor a mayor</option>
               <option value="precio-desc">Precio: mayor a menor</option>
               <option value="titulo">Título A–Z</option>
+              <option value="fecha-asc">Fecha: más antiguas</option>
+              <option value="fecha-desc">Fecha: más recientes</option>
+            </select>
+          </label>
+          <label class="orden">Vista
+            <select id="vista">
+              <option value="0">Miniaturas pequeñas</option>
+              <option value="1">Miniaturas medianas</option>
+              <option value="2" selected>Miniaturas grandes</option>
+              <option value="3">Vista previa</option>
             </select>
           </label>
         </div>
       </div>
       <div class="chips" id="chips"></div>
-      <div class="grilla" id="grilla"><p>Cargando…</p></div>
+      <div class="grilla" id="grilla" data-tamano="2"><p>Cargando…</p></div>
     </main>
   </div>
   <div class="velo" id="velo" hidden></div>
@@ -59,29 +69,43 @@
     let categorias = [];
     let piezas = [];
     let activa = TODAS;
-    let filtros = {};   // campo -> Set de valores elegidos, dentro de la categoría activa. Dentro de un campo es "o", entre campos es "y".
-
-    // Especificaciones por las que se puede filtrar en cada categoría (slug: [campo, etiqueta]).
-    // Las opciones salen de los valores que tienen las piezas cargadas.
-    const FILTROS = {
-      fotografias: [["fotografo", "Fotógrafo"], ["coleccion", "Colección"], ["soporte", "Soporte"], ["proceso", "Proceso"]],
-      postales: [["color", "Color"], ["lugar", "Lugar"], ["editorial", "Editorial"], ["circulada", "Circulación"]],
-      maquinas_de_escribir: [["marca", "Marca"], ["origen", "País de origen"], ["funcionamiento", "Funcionamiento"], ["teclado", "Teclado"]],
-    };
+    // Filtros elegidos: clave del grupo -> Set de valores. Dentro de un grupo es "o", entre grupos es "y".
+    let filtros = {};
+    let periodo = null;          // [desde, hasta] elegido, o null si no se filtra por período
+    const abiertos = new Set();  // grupos desplegados
+    const vistos = new Set();    // grupos que ya se mostraron alguna vez
+    const busquedas = {};        // texto escrito en el buscador de cada grupo
 
     const $ = id => document.getElementById(id);
     const grilla = $("grilla");
 
     const deCategoria = slug => slug === TODAS ? piezas : piezas.filter(p => p._cat.slug === slug);
     const precioDe = p => Number(p.precio_usd ?? p.precio) || 0;
-    // Para buscar sin importar mayúsculas ni tildes
-    const normalizar = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-    // Valores distintos de un campo dentro de una lista de piezas, con su cantidad
-    function valores(lista, campo) {
-      const cuenta = {};
-      lista.forEach(p => { if (p[campo]) cuenta[p[campo]] = (cuenta[p[campo]] || 0) + 1; });
-      return Object.entries(cuenta).sort((a, b) => a[0].localeCompare(b[0], "es"));
+    // Grupos de filtros: la colección y los campos propios marcados como filtro
+    // (en "Todas", los de todas las categorías; un grupo sin opciones no se muestra).
+    function grupos() {
+      const cats = activa === TODAS ? categorias : categorias.filter(c => c.slug === activa);
+      const lista = [{ clave: "coleccion", etiqueta: "Colección", valores: p => p._colec ? [p._colec.nombre] : [] }];
+      cats.flatMap(camposDe).filter(c => c.filtro).forEach(c => {
+        if (!lista.some(g => g.clave === c.clave)) lista.push({ clave: c.clave, etiqueta: c.etiqueta, valores: p => valoresCampo(p, c) });
+      });
+      return lista;
+    }
+
+    const enPeriodo = p => {
+      if (!periodo) return true;
+      const a = periodoDe(p);
+      return !!a && a[0] <= periodo[1] && a[1] >= periodo[0];
+    };
+
+    // Piezas que cumplen la búsqueda y los filtros (menos el grupo "salvo", para contar sus opciones)
+    function filtrar(lista, gs, salvo) {
+      const q = normalizar($("busqueda").value.trim());
+      return lista.filter(p =>
+        (!q || textoDe(p).includes(q)) &&
+        (salvo === "periodo" || enPeriodo(p)) &&
+        gs.every(g => g.clave === salvo || !filtros[g.clave] || g.valores(p).some(v => filtros[g.clave].has(v))));
     }
 
     function pintarCategorias() {
@@ -92,52 +116,99 @@
 
     function pintarFiltros() {
       const enCat = deCategoria(activa);
-      const grupos = (FILTROS[activa] || []).map(([campo, etiqueta]) => [campo, etiqueta, valores(enCat, campo)]).filter(g => g[2].length);
-      $("filtros").innerHTML = grupos.length
-        ? `<h2 class="etiqueta">Filtros</h2>` + grupos.map(([campo, etiqueta, vals], i) => `
-          <details class="grupo"${i < 2 || filtros[campo]?.size ? " open" : ""}>
-            <summary>${esc(etiqueta)}</summary>
-            <div class="opciones">${vals.map(([v, n]) => `
-              <label><input type="checkbox" data-campo="${esc(campo)}" value="${esc(v)}"${filtros[campo]?.has(v) ? " checked" : ""}> ${esc(v)} <small>${n}</small></label>`).join("")}
+      const gs = grupos();
+      let html = "";
+      gs.forEach((g, i) => {
+        // Cuántas piezas quedarían con cada opción, respetando los demás filtros elegidos
+        const cuenta = {};
+        filtrar(enCat, gs, g.clave).forEach(p => new Set(g.valores(p)).forEach(v => cuenta[v] = (cuenta[v] || 0) + 1));
+        const elegidos = filtros[g.clave] || new Set();
+        elegidos.forEach(v => cuenta[v] ??= 0);
+        const vals = Object.entries(cuenta).sort((a, b) =>
+          (elegidos.has(b[0]) - elegidos.has(a[0])) || a[0].localeCompare(b[0], "es", { numeric: true }));
+        if (!vals.length) return;
+        // Los dos primeros grupos arrancan abiertos (la primera vez que aparecen), y los que tienen algo elegido
+        if (!vistos.has(g.clave) && i < 2 || elegidos.size) abiertos.add(g.clave);
+        vistos.add(g.clave);
+        const largas = vals.length >= 8;
+        html += `
+          <details class="grupo" data-grupo="${esc(g.clave)}"${abiertos.has(g.clave) ? " open" : ""}>
+            <summary>${esc(g.etiqueta)}<small>${vals.length}</small></summary>
+            ${largas ? `<input type="search" class="buscar-opcion" data-grupo="${esc(g.clave)}" placeholder="Buscar en ${esc(g.etiqueta.toLowerCase())}" aria-label="Buscar en ${esc(g.etiqueta)}" value="${esc(busquedas[g.clave] || "")}">` : ""}
+            <div class="opciones${largas ? " largas" : ""}">${vals.map(([v, n]) => `
+              <label data-texto="${esc(normalizar(v))}"><input type="checkbox" data-campo="${esc(g.clave)}" value="${esc(v)}"${elegidos.has(v) ? " checked" : ""}> ${esc(v)} <small>${n}</small></label>`).join("")}
             </div>
-          </details>`).join("")
-        : `<p class="sin-filtros">${activa === TODAS ? "Elegí una categoría para ver sus filtros." : "Esta categoría todavía no tiene filtros."}</p>`;
+          </details>`;
+      });
 
+      // Período: entre el año más antiguo y el más reciente de la categoría
+      const anios = enCat.map(periodoDe).filter(Boolean).flat();
+      if (anios.length) {
+        const min = Math.min(...anios), max = Math.max(...anios);
+        const [d, h] = periodo || [min, max];
+        html += `
+          <details class="grupo" data-grupo="periodo"${abiertos.has("periodo") || periodo ? " open" : ""}>
+            <summary>Período<small>${min}–${max}</small></summary>
+            <div class="periodo">
+              <span>Desde <strong id="anio-desde">${d}</strong> hasta <strong id="anio-hasta">${h}</strong></span>
+              <input type="range" id="rango-desde" min="${min}" max="${max}" value="${d}" aria-label="Desde el año">
+              <input type="range" id="rango-hasta" min="${min}" max="${max}" value="${h}" aria-label="Hasta el año">
+            </div>
+          </details>`;
+      }
+
+      $("filtros").innerHTML = html
+        ? `<h2 class="etiqueta">Filtros</h2>` + html
+        : `<p class="sin-filtros">Esta categoría todavía no tiene filtros.</p>`;
+      document.querySelectorAll(".buscar-opcion").forEach(filtrarOpciones);
+
+      const etiqueta = clave => gs.find(g => g.clave === clave)?.etiqueta || clave;
       const activos = Object.entries(filtros).flatMap(([campo, set]) => [...set].map(v => [campo, v]));
-      $("chips").innerHTML = activos.map(([campo, v]) => `<button type="button" class="chip" data-campo="${esc(campo)}" data-valor="${esc(v)}" aria-label="Quitar filtro ${esc(v)}">${esc(v)}</button>`).join("")
-        + (activos.length ? `<button type="button" class="enlace" id="limpiar">Quitar todo</button>` : "");
+      $("chips").innerHTML = activos.map(([campo, v]) => `<button type="button" class="chip" data-campo="${esc(campo)}" data-valor="${esc(v)}" aria-label="Quitar filtro ${esc(etiqueta(campo))}: ${esc(v)}">${esc(v)}</button>`).join("")
+        + (periodo ? `<button type="button" class="chip" data-campo="periodo" aria-label="Quitar filtro de período">${periodo[0]}–${periodo[1]}</button>` : "")
+        + (activos.length || periodo ? `<button type="button" class="enlace" id="limpiar">Quitar todo</button>` : "");
+    }
+
+    // Buscador dentro de un grupo largo: oculta las opciones que no coinciden
+    function filtrarOpciones(input) {
+      const q = normalizar(input.value.trim());
+      busquedas[input.dataset.grupo] = input.value;
+      input.nextElementSibling.querySelectorAll("label").forEach(l => l.hidden = !!q && !l.dataset.texto.includes(q));
     }
 
     function pintarPiezas() {
-      const q = normalizar($("busqueda").value.trim());
-      const campos = Object.values(FILTROS).flat().map(([campo]) => campo);
-      const visibles = deCategoria(activa).filter(p =>
-        Object.entries(filtros).every(([campo, set]) => set.has(p[campo])) &&
-        (!q || normalizar([p.titulo, p.fecha, p.descripcion, p._cat.nombre, ...campos.map(c => p[c])].join(" ")).includes(q)));
+      const visibles = filtrar(deCategoria(activa), grupos());
 
       const orden = $("orden").value;
+      const anio = p => periodoDe(p)?.[0];
+      // Las piezas sin fecha van al final en los dos sentidos
+      const porFecha = signo => (a, b) => (anio(a) == null) - (anio(b) == null) || signo * ((anio(a) ?? 0) - (anio(b) ?? 0));
       if (orden === "precio-asc") visibles.sort((a, b) => precioDe(a) - precioDe(b));
       if (orden === "precio-desc") visibles.sort((a, b) => precioDe(b) - precioDe(a));
       if (orden === "titulo") visibles.sort((a, b) => String(a.titulo).localeCompare(String(b.titulo), "es"));
+      if (orden === "fecha-asc") visibles.sort(porFecha(1));
+      if (orden === "fecha-desc") visibles.sort(porFecha(-1));
 
       const cat = categorias.find(c => c.slug === activa);
       $("titulo-lista").textContent = cat ? cat.nombre : "Todas las piezas";
       $("cantidad").textContent = visibles.length + (visibles.length === 1 ? " pieza" : " piezas");
 
       if (!visibles.length) {
-        grilla.innerHTML = Object.keys(filtros).length || q
+        grilla.innerHTML = Object.keys(filtros).length || periodo || $("busqueda").value.trim()
           ? `<p>Ninguna pieza coincide con lo elegido.</p>`
           : `<p>Todavía no hay piezas en venta en esta categoría.</p>`;
         return;
       }
+      // En "Vista previa" las imágenes se ven grandes: se pide la versión de 1200 px
+      const miniatura = $("vista").value === "3" ? "1200x0" : "400x0";
       grilla.innerHTML = visibles.map(p => {
         const img = archivosDe(p)[0];
         return `
         <article class="pieza">
-          <a href="pieza.html?c=${encodeURIComponent(p.collectionName)}&id=${encodeURIComponent(p.id)}">
-            <div class="placa">${img ? `<img src="${esc(urlImagen(p, img, "400x0"))}" alt="${esc(p.titulo)}" loading="lazy">` : esc(String(p.titulo || "?").charAt(0))}</div>
+          <a href="pieza.html?id=${encodeURIComponent(p.id)}">
+            <div class="placa">${img ? `<img src="${esc(urlImagen(p, img, miniatura))}" alt="${esc(p.titulo)}" loading="lazy">` : esc(String(p.titulo || "?").charAt(0))}</div>
             <h3>${esc(p.titulo)}</h3>
-            <p class="detalle">${esc(p._cat.nombre)}${p.coleccion ? ". " + esc(p.coleccion) : ""}</p>
+            <p class="detalle">${esc(p._cat.nombre)}${p._colec ? ". " + esc(p._colec.nombre) : ""}</p>
             <p class="precio">${esc(formatoPrecio(p))}</p>
             ${p.estado ? `<span class="estado ${p.estado === "Reservada" ? "reservada" : ""}">${esc(p.estado)}</span>` : ""}
           </a>
@@ -156,22 +227,44 @@
       if (!b) return;
       activa = b.dataset.cat;
       filtros = {};
+      periodo = null;
       pintar();
     });
 
     $("filtros").addEventListener("change", e => {
       const { campo } = e.target.dataset;
-      if (!campo) return;
-      (filtros[campo] ||= new Set())[e.target.checked ? "add" : "delete"](e.target.value);
-      if (!filtros[campo].size) delete filtros[campo];
+      if (campo) {
+        (filtros[campo] ||= new Set())[e.target.checked ? "add" : "delete"](e.target.value);
+        if (!filtros[campo].size) delete filtros[campo];
+      } else if (!e.target.matches("input[type=range]")) return;
       pintarFiltros();
       pintarPiezas();
     });
 
+    // Mientras se arrastra el período solo se actualiza la grilla; al soltar ("change"), también los filtros
+    $("filtros").addEventListener("input", e => {
+      if (e.target.matches(".buscar-opcion")) return filtrarOpciones(e.target);
+      if (!e.target.matches("input[type=range]")) return;
+      const desde = $("rango-desde"), hasta = $("rango-hasta");
+      let d = Number(desde.value), h = Number(hasta.value);
+      if (d > h) e.target === desde ? (h = d, hasta.value = h) : (d = h, desde.value = d);
+      periodo = d === Number(desde.min) && h === Number(desde.max) ? null : [d, h];
+      $("anio-desde").textContent = d;
+      $("anio-hasta").textContent = h;
+      pintarPiezas();
+    });
+
+    // Recordar qué grupos quedaron abiertos al volver a dibujar los filtros
+    $("filtros").addEventListener("toggle", e => {
+      const g = e.target.dataset?.grupo;
+      if (g) e.target.open ? abiertos.add(g) : abiertos.delete(g);
+    }, true);
+
     $("chips").addEventListener("click", e => {
       const b = e.target.closest("button");
       if (!b) return;
-      if (b.id === "limpiar") filtros = {};
+      if (b.id === "limpiar") { filtros = {}; periodo = null; }
+      else if (b.dataset.campo === "periodo") periodo = null;
       else {
         filtros[b.dataset.campo].delete(b.dataset.valor);
         if (!filtros[b.dataset.campo].size) delete filtros[b.dataset.campo];
@@ -180,8 +273,21 @@
       pintarPiezas();
     });
 
-    $("busqueda").addEventListener("input", pintarPiezas);
+    $("busqueda").addEventListener("input", () => { pintarFiltros(); pintarPiezas(); });
     $("orden").addEventListener("change", pintarPiezas);
+
+    // Tamaño de las imágenes (como en el visor de colecciones fotográficas); se recuerda en este navegador
+    const CLAVE_VISTA = "prodigo-vista";
+    try {
+      const guardada = localStorage.getItem(CLAVE_VISTA);
+      if ([...$("vista").options].some(o => o.value === guardada)) $("vista").value = guardada;
+    } catch (_) {}
+    grilla.dataset.tamano = $("vista").value;
+    $("vista").addEventListener("change", () => {
+      grilla.dataset.tamano = $("vista").value;
+      try { localStorage.setItem(CLAVE_VISTA, $("vista").value); } catch (_) {}
+      pintarPiezas();
+    });
 
     // Celular: el lateral se abre como cajón
     const cajon = abrir => { $("lateral").classList.toggle("abierto", abrir); $("velo").hidden = !abrir; };
@@ -192,12 +298,8 @@
 
     async function iniciar() {
       try {
-        categorias = await listarCategorias();
-        const grupos = await Promise.all(categorias.map(async c => {
-          const items = await listarPiezas(c.coleccion || c.slug);
-          return items.map(p => ({ ...p, _cat: c }));
-        }));
-        piezas = grupos.flat();
+        ({ categorias, piezas } = await cargarCatalogo({ soloVenta: true }));
+        piezas.sort((a, b) => String(b.created).localeCompare(String(a.created)));   // más recientes primero
         pintar();
       } catch (err) {
         console.error(err);

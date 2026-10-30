@@ -1,26 +1,35 @@
 # Genera tienda/datos/: copia fija de lo que la web pública ve en PocketBase (categorías,
-# piezas visibles y sus fotos), para la versión de exhibición en GitHub Pages.
-# Uso (con PocketBase corriendo):  python exportar_demo.py
+# colecciones, términos y las piezas visibles de la tienda con sus fotos), para la versión
+# de exhibición en GitHub Pages.
+# Uso (con PocketBase corriendo):  python exportar_demo.py      (necesita: pip install pillow)
 # Solo usa la API pública: nada oculto (inventario, campo fuente, piezas no visibles) sale de acá.
+# Solo se exportan las piezas en venta: las del museo pesarían cientos de MB en el repositorio.
+import io
 import json
 import shutil
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from PIL import Image
+
 PB = "http://127.0.0.1:8090"
 DESTINO = Path(__file__).parent / "tienda" / "datos"
 
-# Fotos con licencia Creative Commons que piden citar al autor al publicarlas (se muestra en la ficha)
-CREDITOS = {
-    "Royal 10": "Foto: Anagoria, CC BY 3.0, vía Wikimedia Commons",
-    "Underwood No. 5": "Foto: Windmemories, CC BY-SA 4.0, vía Wikimedia Commons",
-    "Remington portátil": "Foto: Mariochs, CC BY-SA 4.0, vía Wikimedia Commons",
-}
+
+def todos(coleccion, filtro=""):
+    items, pagina = [], 1
+    while True:
+        q = f"perPage=500&page={pagina}" + (f"&filter={urllib.parse.quote(filtro)}" if filtro else "")
+        d = json.load(urllib.request.urlopen(f"{PB}/api/collections/{coleccion}/records?{q}"))
+        items += d["items"]
+        if pagina >= d["totalPages"]:
+            return items
+        pagina += 1
 
 
-def api(ruta):
-    return json.load(urllib.request.urlopen(PB + ruta))
+def guardar(nombre, datos):
+    (DESTINO / f"{nombre}.json").write_text(json.dumps(datos, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
 def main():
@@ -28,29 +37,23 @@ def main():
         shutil.rmtree(DESTINO)
     (DESTINO / "fotos").mkdir(parents=True)
 
-    filtro = urllib.parse.quote("visible = true")
-    categorias = api(f"/api/collections/categorias/records?filter={filtro}&sort=orden&perPage=100")["items"]
-    (DESTINO / "categorias.json").write_text(json.dumps(categorias, ensure_ascii=False, indent=1), encoding="utf-8")
+    guardar("categorias", todos("categorias", "visible = true"))
+    guardar("colecciones", todos("colecciones"))
+    guardar("terminos", todos("terminos"))
 
-    total = 0
-    for c in categorias:
-        coleccion = c.get("coleccion") or c["slug"]
-        piezas = api(f"/api/collections/{coleccion}/records?sort=-created&perPage=500")["items"]
-        for p in piezas:
-            if p["titulo"] in CREDITOS:
-                p["credito"] = CREDITOS[p["titulo"]]
-            carpeta = DESTINO / "fotos" / p["id"]
-            carpeta.mkdir()
-            for archivo in p["imagenes"]:
-                urllib.request.urlretrieve(f"{PB}/api/files/{p['collectionId']}/{p['id']}/{archivo}", carpeta / archivo)
-        (DESTINO / f"{coleccion}.json").write_text(json.dumps(piezas, ensure_ascii=False, indent=1), encoding="utf-8")
-        total += len(piezas)
-        print(f"{c['nombre']}: {len(piezas)} piezas")
-
-    faltan = set(CREDITOS) - {p for f in DESTINO.glob("*.json") for p in (x.get("titulo") for x in json.loads(f.read_text(encoding="utf-8")))}
-    if faltan:
-        print("AVISO: no se encontraron estas piezas con crédito obligatorio:", ", ".join(sorted(faltan)))
-    print(f"Listo: {total} piezas en {DESTINO}")
+    piezas = todos("piezas", 'destino = "Venta"')
+    for p in piezas:
+        carpeta = DESTINO / "fotos" / p["id"]
+        carpeta.mkdir()
+        # Versión reducida (lado mayor 1200 px, JPG calidad 82), para no cargar el repositorio.
+        # No se usan las miniaturas de PocketBase: las guarda con calidad muy alta y agranda las chicas.
+        for archivo in p["imagenes"]:
+            original = urllib.request.urlopen(f"{PB}/api/files/{p['collectionId']}/{p['id']}/{archivo}").read()
+            imagen = Image.open(io.BytesIO(original))
+            imagen.thumbnail((1200, 1200))
+            imagen.convert("RGB").save(carpeta / archivo, "JPEG", quality=82)
+    guardar("piezas", piezas)
+    print(f"Listo: {len(piezas)} piezas en {DESTINO}")
 
 
 if __name__ == "__main__":

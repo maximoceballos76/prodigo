@@ -18,18 +18,6 @@
 
   <script src="api.js"></script>
   <script>
-    // Datos de catalogación que se muestran si están completos (campo de la base, etiqueta)
-    const CAMPOS = [
-      ["coleccion", "Colección"], ["fotografo", "Fotógrafo"], ["fecha", "Fecha"],
-      ["proceso", "Proceso"], ["soporte", "Soporte"], ["medidas", "Medidas"],
-      ["inscripciones", "Inscripciones"], ["conservacion", "Estado de conservación"],
-      // Postales
-      ["editorial", "Editorial"], ["lugar", "Lugar"], ["tecnica", "Técnica"], ["color", "Color"], ["circulada", "Circulación"],
-      // Máquinas de escribir
-      ["marca", "Marca"], ["modelo", "Modelo"], ["origen", "País de origen"], ["numero_serie", "N.º de serie"],
-      ["teclado", "Teclado"], ["funcionamiento", "Funcionamiento"]
-    ];
-
     const ficha = document.getElementById("ficha");
     const params = new URLSearchParams(location.search);
 
@@ -41,7 +29,7 @@
     async function iniciar() {
       let p;
       try {
-        p = await obtenerPieza(params.get("c") || "", params.get("id") || "");
+        p = await obtenerPieza(params.get("id") || "");
       } catch (err) {
         console.error(err);
         return noEncontrada();
@@ -50,14 +38,22 @@
       document.title = `Pródigo – ${p.titulo}`;
       const archivos = archivosDe(p);
       const vistas = archivos.length
-        ? archivos.map((f, i) => ({ src: urlImagen(p, f, "1200x0"), etiqueta: archivos.length > 1 ? `Vista ${i + 1}` : "Imagen principal" }))
+        ? archivos.map((f, i) => ({ src: urlImagen(p, f, "1200x0"), etiqueta: caraDe(p, i) }))
         : [{ src: "", etiqueta: "Imagen principal" }];
 
       const placa = v => v.src
         ? `<img src="${esc(v.src)}" alt="${esc(p.titulo)}: ${esc(v.etiqueta)}">`
         : `<span>${esc(String(p.titulo || "?").charAt(0))}</span>`;
 
-      const filas = CAMPOS.filter(([k]) => p[k]).map(([k, et]) => `<dt>${et}</dt><dd>${esc(p[k])}</dd>`).join("");
+      // Datos de catalogación: los comunes y los propios de la categoría, si están completos
+      const datos = [
+        ["Categoría", [p._cat?.nombre]], ["Colección", [p._colec?.nombre]], ["Fecha", [p.fecha]], ["Medidas", [p.medidas]],
+        ...camposDe(p._cat).map(c => [c.etiqueta, valoresCampo(p, c)]),
+        ["Inscripciones", [p.inscripciones]],
+      ];
+      const filas = datos.map(([et, v]) => [et, v.filter(Boolean)]).filter(([, v]) => v.length)
+        .map(([et, v]) => `<dt>${esc(et)}</dt><dd style="white-space:pre-line">${esc(v.join("; "))}</dd>`).join("");
+      const enVenta = p.destino === DESTINO_VENTA;
       const consulta = `mailto:contacto@ejemplo.com?subject=${encodeURIComponent("Consulta por " + p.titulo + " (" + p.id + ")")}`;
 
       ficha.innerHTML = `
@@ -68,15 +64,14 @@
             ${vistas.length > 1 ? `<div class="miniaturas" role="group" aria-label="Vistas de la pieza">
               ${vistas.map((v, i) => `<button type="button" class="miniatura" data-i="${i}" aria-pressed="${i === 0}" aria-label="${esc(v.etiqueta)}"><span class="placa">${placa(v)}</span><small>${esc(v.etiqueta)}</small></button>`).join("")}
             </div>` : ""}
-            ${p.credito ? `<p class="credito">${esc(p.credito)}</p>` : ""}
           </div>
           <div class="ficha-datos">
             <h1>${esc(p.titulo)}</h1>
-            ${formatoPrecio(p) ? `<p class="precio-grande">${esc(formatoPrecio(p))}</p>` : ""}
-            ${p.estado ? `<span class="estado ${p.estado === "Reservada" ? "reservada" : ""}">${esc(p.estado)}</span>` : ""}
+            ${enVenta && formatoPrecio(p) ? `<p class="precio-grande">${esc(formatoPrecio(p))}</p>` : ""}
+            ${enVenta && p.estado ? `<span class="estado ${p.estado === "Reservada" ? "reservada" : ""}">${esc(p.estado)}</span>` : ""}
             ${p.descripcion ? `<p style="margin-top:1rem">${esc(p.descripcion)}</p>` : ""}
             ${filas ? `<dl>${filas}</dl>` : ""}
-            <a class="boton" href="${consulta}">${p.estado === "Reservada" ? "Consultar disponibilidad" : "Consultar por esta pieza"}</a>
+            ${enVenta ? `<a class="boton" href="${consulta}">${p.estado === "Reservada" ? "Consultar disponibilidad" : "Consultar por esta pieza"}</a>` : ""}
           </div>
         </div>`;
 
