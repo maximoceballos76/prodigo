@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
   <style>
     .panel { max-width: 72rem; margin: 0 auto; padding: 2rem clamp(1rem, 4vw, 3rem) 5rem; }
     .panel h1 { font-family: "Newsreader", Georgia, serif; font-weight: 500; font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.1; }
@@ -120,7 +120,7 @@
 <body data-theme="papel">
 
   <header class="cabecera" id="cabecera"></header>
-  <script src="cabecera.js"></script>
+  <script src="cabecera.js?v=2"></script>
 
   <main class="panel">
 
@@ -184,8 +184,8 @@
   </main>
   <div class="velo" id="velo" hidden></div>
 
-  <script src="api.js"></script>
-  <script src="sesion.js"></script>
+  <script src="api.js?v=2"></script>
+  <script src="sesion.js?v=2"></script>
   <script>
     const $ = id => document.getElementById(id);
     let sesion = null;
@@ -251,7 +251,9 @@
           return mostrar("vista-ingreso");
         }
         $("lista").innerHTML = "";
-        return avisar("No se pudieron traer las piezas. Revisá que PocketBase esté corriendo.");
+        return avisar(MODO_DEMO
+          ? "No se pudieron traer las piezas. Probá recargar la página en un momento."
+          : "No se pudieron traer las piezas. Revisá que PocketBase esté corriendo.");
       }
       pintarTodo();
     }

@@ -568,6 +568,16 @@ tienda/pocketbase/  (servidor y base de datos)
   - .gitignore impide subir la base de datos (pb_data), los backups y
     pocketbase.exe.
 
+  CACHÉ DEL NAVEGADOR (importante al publicar cambios de código)
+  GitHub Pages deja que el navegador guarde cada archivo hasta 10 minutos.
+  Si una página nueva se combina con un api.js o style.css viejo, la página
+  falla. Por eso las páginas cargan los archivos con un número de versión
+  (api.js?v=2, style.css?v=2, cabecera.js?v=2, sesion.js?v=2).
+  CADA VEZ QUE SE PUBLIQUE UN CAMBIO EN api.js, sesion.js, cabecera.js O
+  style.css: subir ese número (?v=3, ?v=4...) en las 5 páginas (index,
+  tienda, pieza, cargar, admin). Los datos (datos/*.json) no lo necesitan:
+  se piden siempre revalidados ("no-cache", en api.js > demo()).
+
   PARA ACTUALIZAR LA DEMO CON LOS DATOS NUEVOS
     1. Con PocketBase corriendo:   python exportar_demo.py
     2. Subir los cambios (commit + push a main). En 1-2 minutos se publica.

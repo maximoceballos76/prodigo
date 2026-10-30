@@ -9,7 +9,8 @@ const DESTINO_VENTA = "Venta";
 const MODO_DEMO = location.hostname.endsWith(".github.io");
 
 async function demo(archivo) {
-  const r = await fetch(`datos/${archivo}.json`);
+  // "no-cache": GitHub Pages deja guardar los archivos 10 minutos; así siempre se confirma que sean los últimos
+  const r = await fetch(`datos/${archivo}.json`, { cache: "no-cache" });
   if (!r.ok) throw new Error("Falta datos/" + archivo + ".json");
   return r.json();
 }
