@@ -560,7 +560,10 @@ tienda/pocketbase/  (servidor y base de datos)
 6. VERSIÓN DE EXHIBICIÓN EN GITHUB PAGES (prototipo publicado)
 ==============================================================================
 
-  Dirección: https://maximoceballos76.github.io/prodigo/
+  Dirección: https://prodigo.com.ar (dominio propio, comprado en NIC Argentina;
+  DNS en Cloudflare: 4 registros A a GitHub Pages y www CNAME a
+  maximoceballos76.github.io, en "DNS only"). La dirección vieja
+  https://maximoceballos76.github.io/prodigo/ redirige al dominio.
 
   GitHub Pages solo sirve archivos fijos: no puede correr PocketBase. Desde
   2026-10-30 la versión publicada se conecta al PocketBase público (túnel,
@@ -583,7 +586,8 @@ tienda/pocketbase/  (servidor y base de datos)
       provisorias, unos 38 MB.
 
   CÓMO FUNCIONA
-  - tienda/api.js detecta si la página corre en *.github.io (MODO_DEMO) y en
+  - tienda/api.js detecta si la página está publicada (cualquier dirección que no sea
+    localhost/127.0.0.1) y, si el servidor no responde (MODO_DEMO), y en
     ese caso lee tienda/datos/*.json (categorias, colecciones, terminos,
     piezas) en vez de llamar a PocketBase; las
     fotos salen de tienda/datos/fotos/<id de la pieza>/.
@@ -599,7 +603,7 @@ tienda/pocketbase/  (servidor y base de datos)
   GitHub Pages deja que el navegador guarde cada archivo hasta 10 minutos.
   Si una página nueva se combina con un api.js o style.css viejo, la página
   falla. Por eso las páginas cargan los archivos con un número de versión
-  (api.js?v=2, style.css?v=2, cabecera.js?v=2, sesion.js?v=2).
+  (api.js?v=4, style.css?v=4, cabecera.js?v=4, sesion.js?v=4).
   CADA VEZ QUE SE PUBLIQUE UN CAMBIO EN api.js, sesion.js, cabecera.js O
   style.css: subir ese número (?v=3, ?v=4...) en las 5 páginas (index,
   tienda, pieza, cargar, admin). Los datos (datos/*.json) no lo necesitan:

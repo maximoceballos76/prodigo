@@ -2,7 +2,8 @@
 // publicada en GitHub Pages. Vacía = no hay servidor público: lo publicado es solo una demostración.
 // En la computadora donde corre PocketBase (o con un servidor web local) se usa siempre la local.
 const PB_PUBLICO = "https://desktop-e020bk9.taila973ce.ts.net";   // Tailscale Funnel desde la PC de Maxi
-const PUBLICADO = location.hostname.endsWith(".github.io");
+// Publicado = en prodigo.com.ar o en *.github.io (no en un servidor local ni abierto como archivo)
+const PUBLICADO = !["localhost", "127.0.0.1", ""].includes(location.hostname);
 const PB_URL = PUBLICADO ? PB_PUBLICO : "http://127.0.0.1:8090";
 
 // Valor exacto de la opción "Venta" del campo destino (mismas mayúsculas que en el panel).

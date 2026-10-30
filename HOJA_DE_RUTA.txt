@@ -156,6 +156,13 @@ ETAPA 6 – PUBLICAR LA PÁGINA (producción)
 
 [x] Versión de exhibición (solo lectura) en GitHub Pages:
     https://maximoceballos76.github.io/prodigo/ (ver DOCUMENTACION.txt, 6).
+[x] Dominio propio prodigo.com.ar (NIC Argentina, DNS en Cloudflare plan
+    gratis) apuntando a GitHub Pages.
+[ ] api.prodigo.com.ar con Cloudflare Tunnel (reemplaza a Tailscale Funnel;
+    cambiar PB_PUBLICO en api.js y PB_URL en update-francisco/remote.js).
+[ ] Cerrar el panel /_/ de PocketBase con Cloudflare Access, activar el
+    límite de pedidos de PocketBase y cambiar la contraseña de test@test.com.
+[ ] Correo contacto@prodigo.com.ar con Cloudflare Email Routing.
 [x] PROVISORIO (2026-10-30): PocketBase público por un túnel de Tailscale
     desde la PC de Maxi (https://desktop-e020bk9.taila973ce.ts.net). El
     sitio publicado ya guarda en la base: Francisco y el dueño pueden cargar
