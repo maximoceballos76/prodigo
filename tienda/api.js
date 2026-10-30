@@ -1,12 +1,29 @@
-// Conexión con PocketBase. Si el servidor cambia de dirección, se cambia solo esta línea.
-const PB_URL = "http://127.0.0.1:8090";
+// Dirección pública de PocketBase (el túnel desde la computadora donde corre), que usa la versión
+// publicada en GitHub Pages. Vacía = no hay servidor público: lo publicado es solo una demostración.
+// En la computadora donde corre PocketBase (o con un servidor web local) se usa siempre la local.
+const PB_PUBLICO = "https://desktop-e020bk9.taila973ce.ts.net";   // Tailscale Funnel desde la PC de Maxi
+const PUBLICADO = location.hostname.endsWith(".github.io");
+const PB_URL = PUBLICADO ? PB_PUBLICO : "http://127.0.0.1:8090";
 
 // Valor exacto de la opción "Venta" del campo destino (mismas mayúsculas que en el panel).
 const DESTINO_VENTA = "Venta";
 
-// Versión de exhibición publicada en GitHub Pages: no hay PocketBase, se lee la copia fija de
-// datos/ que genera exportar_demo.py (solo lectura: el panel y la carga no funcionan ahí).
-const MODO_DEMO = location.hostname.endsWith(".github.io");
+// Modo demostración: se lee la copia fija de datos/ que genera exportar_demo.py (solo lectura: el
+// panel y la carga no guardan). Pasa en lo publicado si no hay servidor público o si no responde
+// (por ejemplo, la computadora del túnel está apagada). Se decide al abrir la página: las funciones
+// que lo usan esperan a servidorListo.
+let MODO_DEMO = PUBLICADO && !PB_PUBLICO;
+let SERVIDOR_CAIDO = false;
+const servidorListo = (async () => {
+  if (!PUBLICADO || !PB_PUBLICO) return;
+  try {
+    const r = await fetch(PB_URL + "/api/health", { cache: "no-store", signal: AbortSignal.timeout(6000) });
+    if (!r.ok) throw new Error("PocketBase respondió " + r.status);
+  } catch (err) {
+    console.warn("El servidor no responde: se muestra la copia fija de datos/", err);
+    MODO_DEMO = SERVIDOR_CAIDO = true;
+  }
+})();
 
 async function demo(archivo) {
   // "no-cache": GitHub Pages deja guardar los archivos 10 minutos; así siempre se confirma que sean los últimos
@@ -34,6 +51,7 @@ async function pbTodos(coleccion, filtro = "", token = "") {
 // cada pieza trae _cat (su categoría), _colec (su colección o null) y _terminos (lista).
 // soloVenta: solo las piezas de la tienda (destino Venta).
 async function cargarCatalogo({ soloVenta = false, token = "" } = {}) {
+  await servidorListo;
   const [categorias, colecciones, terminos, piezas] = MODO_DEMO
     ? await Promise.all(["categorias", "colecciones", "terminos", "piezas"].map(demo))
     : await Promise.all([
@@ -53,6 +71,7 @@ async function cargarCatalogo({ soloVenta = false, token = "" } = {}) {
 
 // Una pieza, con sus relaciones (para la ficha y el formulario)
 async function obtenerPieza(id, token = "") {
+  await servidorListo;
   const { piezas, categorias, colecciones, terminos } = MODO_DEMO
     ? await cargarCatalogo()
     : await (async () => {

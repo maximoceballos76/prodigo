@@ -3,7 +3,7 @@
 // Reemplaza la lectura de los JSON de prodigo-catalogador: las fichas, colecciones y términos
 // salen de la misma base que usa la tienda. Se muestran las fotografías del museo (no las de venta).
 window.BixioRemote=(()=>{
- const PB_URL='http://127.0.0.1:8090'; // dirección de PocketBase: cambiarla al publicar
+ const PB_URL='https://desktop-e020bk9.taila973ce.ts.net'; // PocketBase de Pródigo (túnel de Tailscale desde la PC de Maxi)
  const FILTRO='categoria.slug = "fotografias" && (destino = "Museo Miranda" || destino = "Museo Ezeiza") && visible = true';
  // Tipo de término en la base -> grupo de filtros del visor
  const GRUPOS={autor:'autores',persona_identificada:'identificados',personas:'personas',tipo_imagen:'tipo',retrato:'retrato',encuadre:'encuadre',orientacion:'orientacion',color:'color',ambiente:'ambiente',objeto:'objetos',destacado:'destacados',firma:'marca'};

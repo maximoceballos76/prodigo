@@ -25,12 +25,14 @@ QUÉ CAMBIÓ
   ya no lo usa remote.js; se dejó por si se usa en otra parte).
 
 
-ANTES DE PUBLICAR
-  1. En remote.js, cambiar PB_URL (primera línea de la configuración) por la
-     dirección pública de PocketBase, con https. Hoy apunta a la computadora
-     local (http://127.0.0.1:8090), que solo sirve para probar.
-  2. Copiar estos archivos sobre los del repositorio
-     prodigo_colecciones_fotograficas.
+PUBLICAR
+  Copiar estos archivos sobre los del repositorio
+  prodigo_colecciones_fotograficas. remote.js ya apunta a la dirección
+  pública de PocketBase (PB_URL): https://desktop-e020bk9.taila973ce.ts.net,
+  un túnel de Tailscale desde la PC de Maxi. Si PocketBase se muda a otro
+  servidor, cambiar solo esa línea.
+  Mientras la base esté en esa PC, el visor funciona solo con la PC prendida;
+  si no responde, muestra el aviso de error y reintenta solo.
 
 
 CÓMO SE CORRESPONDEN LOS DATOS

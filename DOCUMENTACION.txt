@@ -30,8 +30,30 @@ Hacen falta dos procesos (definidos en .claude/launch.json):
      (Si la web la sirve Five Server desde VS Code, la carpeta servida es la
      del proyecto: entonces es http://127.0.0.1:5500/tienda/)
 
-La dirección de PocketBase que usa la web está en una sola línea: PB_URL en
-tienda/api.js.
+La dirección de PocketBase que usa la web está en tienda/api.js: en la
+computadora donde corre PocketBase se usa la local (127.0.0.1:8090); la
+versión publicada en GitHub Pages usa PB_PUBLICO (ver más abajo).
+
+SERVIDOR PÚBLICO (desde 2026-10-30): TÚNEL DE TAILSCALE DESDE LA PC DE MAXI
+  Para que Francisco, el dueño y otros editores carguen piezas desde sus
+  computadoras, la PC de Maxi hace de servidor:
+    - PocketBase corre en esa PC (iniciar_servidor.bat, en la raíz).
+    - Tailscale Funnel lo publica en
+        https://desktop-e020bk9.taila973ce.ts.net
+      (PB_PUBLICO en tienda/api.js y PB_URL en update-francisco/remote.js).
+      Tailscale arranca solo con Windows y recuerda el túnel. Comandos
+      ("C:\Program Files\Tailscale\tailscale.exe" ...):
+        funnel status            ver si está activo
+        funnel --bg 8090         activarlo
+        funnel --https=443 off   apagarlo
+  El sitio publicado (cargar.html, admin.html) guarda directo en esta base.
+  Si la PC está apagada o PocketBase cerrado, el sitio publicado lo detecta
+  al abrir la página: la tienda muestra la copia fija de datos/ y los
+  formularios avisan "El servidor no está disponible" y no guardan nada.
+  OJO: el formulario y el panel de PocketBase (/_/) quedan accesibles desde
+  internet. Las cuentas (editores y administradores) necesitan contraseñas
+  fuertes. Es una solución provisoria: lo definitivo es un servidor propio
+  (ver HOJA_DE_RUTA.txt, Etapa 6).
 
 
 ==============================================================================
@@ -540,8 +562,13 @@ tienda/pocketbase/  (servidor y base de datos)
 
   Dirección: https://maximoceballos76.github.io/prodigo/
 
-  GitHub Pages solo sirve archivos fijos: no puede correr PocketBase. Por eso
-  la versión publicada es de SOLO LECTURA:
+  GitHub Pages solo sirve archivos fijos: no puede correr PocketBase. Desde
+  2026-10-30 la versión publicada se conecta al PocketBase público (túnel,
+  ver sección 1) y funciona completa: tienda, ficha, carga y panel. Lo que
+  sigue describe el MODO DEMOSTRACIÓN, que se activa solo si el servidor no
+  responde al abrir la página (PC apagada o PocketBase cerrado), o si
+  PB_PUBLICO queda vacío en api.js. En ese modo la versión publicada es de
+  SOLO LECTURA:
     - Funcionan: portada, tienda, filtros y fichas de pieza.
     - admin.html y cargar.html funcionan en MODO DEMOSTRACIÓN (sesion.js):
       se entra sin contraseña, arriba aparece un cartel que lo avisa, el

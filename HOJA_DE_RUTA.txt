@@ -156,10 +156,22 @@ ETAPA 6 – PUBLICAR LA PÁGINA (producción)
 
 [x] Versión de exhibición (solo lectura) en GitHub Pages:
     https://maximoceballos76.github.io/prodigo/ (ver DOCUMENTACION.txt, 6).
-[ ] Elegir hosting para la web (archivos de tienda/) y para PocketBase
+[x] PROVISORIO (2026-10-30): PocketBase público por un túnel de Tailscale
+    desde la PC de Maxi (https://desktop-e020bk9.taila973ce.ts.net). El
+    sitio publicado ya guarda en la base: Francisco y el dueño pueden cargar
+    piezas desde sus computadoras. Depende de que esa PC esté prendida con
+    PocketBase abierto (iniciar_servidor.bat); si no, el sitio muestra la
+    copia fija y los formularios no guardan.
+[ ] Contraseña fuerte para la cuenta de prueba test@test.com (es la que
+    usan Francisco y el dueño) y para el administrador, ahora que el
+    formulario y el panel de PocketBase están en internet.
+[ ] Respaldos automáticos de pb_data: urgente ahora que cargan varias
+    personas (ver más abajo).
+[ ] Elegir hosting definitivo para PocketBase, que no dependa de una PC
     (necesita un servidor que quede prendido y con disco persistente: VPS,
     Fly.io con volume, PocketHost, etc.; no sirven Vercel, Netlify ni
-    GitHub Pages).
+    GitHub Pages). Al mudarlo: cambiar PB_PUBLICO en tienda/api.js y
+    PB_URL en el remote.js del visor de Francisco.
 [ ] En un VPS: dejar PocketBase como servicio (systemd) para que arranque
     solo y se levante si se cae; HTTPS con "pocketbase serve dominio" o con
     Caddy / nginx adelante.
@@ -167,7 +179,6 @@ ETAPA 6 – PUBLICAR LA PÁGINA (producción)
     decidir si van en el disco del servidor o en un almacenamiento tipo S3
     (Cloudflare R2, Backblaze), que PocketBase ya soporta.
 [ ] Dominio propio y HTTPS.
-[ ] Cambiar PB_URL en tienda/api.js por la dirección pública de PocketBase.
 [ ] Configurar en PocketBase el acceso solo desde el dominio de la web.
 [ ] Copias de seguridad automáticas de pb_data y de las fotos subidas
     (hoy son manuales, en backups/). PocketBase trae respaldos
@@ -176,7 +187,6 @@ ETAPA 6 – PUBLICAR LA PÁGINA (producción)
     disco duro, fuera de PocketBase (la base solo guarda el nombre del
     archivo en "archivo_master"). Definir dónde va la copia (otro disco,
     la nube) y cada cuánto se hace.
-[ ] Contraseñas fuertes para administradores y editores.
 [ ] Título, descripción e imagen para cuando se comparte un link
     (WhatsApp, redes) y para buscadores. Ojo: la ficha arma el contenido
     con JavaScript, y algunas redes no lo leen; puede hacer falta una
